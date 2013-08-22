@@ -1,0 +1,148 @@
+if v:lang =~ "utf8$" || v:lang =~ "UTF-8$"
+   set fileencodings=ucs-bom,utf-8,latin1
+endif
+
+set nocompatible	" Use Vim defaults (much better!)
+set bs=indent,eol,start		" allow backspacing over everything in insert mode
+"set ai			" always set autoindenting on
+"set backup		" keep a backup file
+set noswapfile
+set ignorecase
+set viminfo='20,\"50	" read/write a .viminfo file, don't store more
+			" than 50 lines of registers
+set history=50		" keep 50 lines of command line history
+"set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [POS=%l,%v][%p%%]\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}
+"set statusline=[%F]%y%r%m%*%=[Line:%l/%L,Column:%c][%p%%]" 总是显示状态行set laststatus=2
+set ruler		" show the cursor position all the time
+"set nocscopeverbose
+filetype on
+" Only do this part when compiled with support for autocommands
+if has("autocmd")
+  augroup fedora
+  autocmd!
+  " In text files, always limit the width of text to 78 characters
+  " autocmd BufRead *.txt set tw=78
+  " When editing a file, always jump to the last cursor position
+  autocmd BufReadPost *
+  \ if line("'\"") > 0 && line ("'\"") <= line("$") |
+  \   exe "normal! g'\"" |
+  \ endif
+  " don't write swapfile on most commonly used directories for NFS mounts or USB sticks
+  autocmd BufNewFile,BufReadPre /media/*,/mnt/* set directory=~/tmp,/var/tmp,/tmp
+  " start with spec file template
+  autocmd BufNewFile *.spec 0r /usr/share/vim/vimfiles/template.spec
+  augroup END
+endif
+
+if has("cscope") && filereadable("/usr/bin/cscope")
+   set csprg=/usr/bin/cscope
+   set csto=0
+   set cst
+   set nocsverb
+   " add any database in current directory
+   if filereadable("cscope.out")
+      cs add cscope.out
+   " else add database pointed to by environment
+   elseif $CSCOPE_DB != ""
+      cs add $CSCOPE_DB
+   endif
+   set csverb
+endif
+
+"filetype plugin on
+
+" Switch syntax highlighting on, when the terminal has colors
+" Also switch on highlighting the last used search pattern.
+if &t_Co > 2 || has("gui_running")
+  syntax on
+  set hlsearch
+endif
+
+
+if &term=="xterm"
+     set t_Co=8
+     set t_Sb=[4%dm
+     set t_Sf=[3%dm
+endif
+
+
+
+" Don't wake up system with blinking cursor:
+" http://www.linuxpowertop.org/known.php
+let &guicursor = &guicursor . ",a:blinkon0"
+
+"syntax on switch
+function! ToggleSyntax()
+   if exists("g:syntax_on")
+      syntax off
+   else
+      syntax enable
+   endif
+endfunction
+
+nmap <silent>  ;s  :call ToggleSyntax()<CR>
+
+ 
+"colorscheme  switch
+function! SwitchMyColorscheme(colorID)
+if a:colorID==0
+   set background=light
+   colorscheme default
+elseif a:colorID==1
+   set background=light
+   colorscheme evening
+elseif a:colorID==2
+   set background=dark
+   colorscheme  morning
+elseif a:colorID==3
+   set background=dark
+   colorscheme  delek 
+elseif a:colorID==9
+   hi LineNr ctermfg=black
+   hi LineNr ctermbg=grey 
+   set nu
+endif
+syntax on
+syntax reset
+endfunction
+
+nmap <silent>  ;bk1  :call SwitchMyColorscheme(1)<CR>
+nmap <silent>  ;bk2  :call SwitchMyColorscheme(2)<CR>
+nmap <silent>  ;bk3  :call SwitchMyColorscheme(3)<CR>
+nmap <silent>  ;bk9  :call SwitchMyColorscheme(9)<CR>
+
+"convert file to html
+function! ConvertToMyHtml(sline,eline,...)
+let savename = 0
+if a:0 > 0
+let savename = a:1
+"exe SwitchMyColorscheme(3)
+endif
+let srcfilename = expand("%")
+"config Convert2HTML
+let g:html_number_lines = 1
+"run  cmd Convert2HTML  in tohtml file...
+exe  tohtml#Convert2HTML(a:sline, a:eline)
+"insert filename to html 
+if !empty(srcfilename)
+let addinfocmd='%s/\(<pre>\)/\1<span>'.escape(srcfilename.'</span>',' /')
+exe addinfocmd
+endif
+"save html file
+if !empty(savename)
+"if savename is a path
+if strpart(savename, strlen(savename) - 1, 1) == "/"
+let savename .=join(split(srcfilename,'\W'), '_').'_'.a:sline.'_'.a:eline.'.html'
+endif
+"create cmd string for save html
+let savecmd='w! '.savename
+exe savecmd
+q!
+"exe SwitchMyColorscheme(1)
+endif
+endfunction
+
+command! -nargs=+ -range=% -complete=file CvtHtml :call ConvertToMyHtml(<line1>, <line2>, <q-args>)  
+
+call  SwitchMyColorscheme(3)
+call  SwitchMyColorscheme(9)
