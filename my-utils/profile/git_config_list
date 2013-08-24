@@ -1,0 +1,16 @@
+user.name=elvonzion
+user.email=elvonzion@gmail.com
+core.editor=vim
+color.ui=always
+merge.tool=meld
+diff.externa=/usr/local/bin/wx_meld_diff.sh
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
+remote.googlecode.url=https://code.google.com/p/elvon-linux-porting/
+remote.googlecode.fetch=+refs/heads/*:refs/remotes/googlecode/*
+remote.origin.url=git@github.com:chaoswizard/linux-porting.git
+remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+branch.master.remote=origin
+branch.master.merge=refs/heads/master
