@@ -1,0 +1,12 @@
+[user]
+	name = elvonzion
+	email = elvonzion@gmail.com
+
+[core]
+	editor = vim
+[color]
+	ui = always
+[merge]
+	tool = meld
+[diff]
+	externa = /usr/local/bin/wx_meld_diff.sh
