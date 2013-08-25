@@ -1,3 +1,6 @@
+#!/bin/sh
+
+echo "welcome elvonzion!"
 mount -a
 mkdir /dev/pts
 mount -t devpts devpts /dev/pts
