@@ -11,4 +11,4 @@ exit $?
 fi
 
 echo "install  glibc to ${my_rootfs}"
-cp /usr/local/arm/4.4.3/lib/*.so* ${my_rootfs}/lib
+cp -d  /usr/local/arm/4.4.3/lib/*.so* ${my_rootfs}/lib
