@@ -11,6 +11,7 @@ exit $?
 fi
 
 def_tools_dir=/usr/local/arm/4.4.3/lib
-
-echo "install ${def_tools_dir} to ${my_rootfs}"
-cp -d  ${def_tools_dir}/*.so* ${my_rootfs}/lib
+dest_tools_dir=${my_rootfs}/lib
+echo "install ${def_tools_dir} to ${dest_tools_dir}"
+cp -d  ${def_tools_dir}/*.so* ${dest_tools_dir}
+#ls ${dest_tools_dir} -l
