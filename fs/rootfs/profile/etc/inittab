@@ -1,0 +1,5 @@
+::sysinit:/etc/init.d/rcS
+s3c2410_serial0::askfirst:-/bin/sh
+::restart:/sbin/init
+::ctrlaltdel:/sbin/reboot
+::shutdown:umount -a -r
