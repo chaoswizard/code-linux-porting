@@ -10,10 +10,16 @@ echo "usage: $0 valid dir which existed"
 exit $?
 fi
 
+CP='cp -d -rf'
+
 dest_dir=${my_rootfs}
 
 src_files=lib_busybox/*
 
 echo "install ${src_files} to ${dest_dir}"
-cp -d -rf  ${src_files} ${dest_dir}
-#ls ${dest_dir} -l
+${CP}  ${src_files} ${dest_dir}
+
+src_files=profile/*
+
+echo "install ${src_files} to ${dest_dir}"
+${CP}  ${src_files} ${dest_dir}
