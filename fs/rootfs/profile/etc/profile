@@ -7,7 +7,8 @@ export HOSTNAME='/bin/hostname'
 export USER=root
 export HOME=root
 export LOGNAME=root
-export PS1='[\u@\h=W]#'
+#export PS1='[\u@\h=\W]#'
+export PS1="[$USER@$HOSTNAME \W]\#'
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 LD_LIBRARY_PATH=/lib:/usr/lib:$LD_LIBRARY_PATH
