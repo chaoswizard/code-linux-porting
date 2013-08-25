@@ -10,5 +10,5 @@ echo "usage: $0 valid dir which existed"
 exit $?
 fi
 
-echo "install  glibc to $(my_rootfs)"
-cp /usr/local/arm/4.4.3/lib/*.so* $(my_rootfs)/lib
+echo "install  glibc to ${my_rootfs}"
+cp /usr/local/arm/4.4.3/lib/*.so* ${my_rootfs}/lib
