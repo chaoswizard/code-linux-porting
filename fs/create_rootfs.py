@@ -146,8 +146,8 @@ class RootFs(object):
                    self.instance.get_cmd()
         self.arg = self.instance.get_arg()
         print 'proc:', self.cmd, ' ', self.arg
-        #subprocess.Popen(self.cmd + self.arg)
-        os.system(self.cmd + self.arg)
+        #subprocess.Popen(self.cmd + ' ' + self.arg)
+        os.system(self.cmd + ' ' + self.arg)
         
     def dump(self, dump_name):
         print dump_name
