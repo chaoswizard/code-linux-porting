@@ -10,8 +10,10 @@ echo "usage: $0 valid dir which existed"
 exit $?
 fi
 
-def_tools_dir=/usr/local/arm/4.4.3/lib
-dest_tools_dir=${my_rootfs}/lib
-echo "install ${def_tools_dir} to ${dest_tools_dir}"
-cp -d  ${def_tools_dir}/*.so* ${dest_tools_dir}
-#ls ${dest_tools_dir} -l
+dest_dir=${my_rootfs}
+
+src_files=lib_busybox/*
+
+echo "install ${src_files} to ${dest_dir}"
+cp -d -rf  ${src_files} ${dest_dir}
+#ls ${dest_dir} -l
