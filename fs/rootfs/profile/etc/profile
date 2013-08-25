@@ -3,12 +3,12 @@
 #no core file by defaults
 #unlimit -S -c 0>/dev/null 2>&1
 
-export HOSTNAME='/bin/hostname'
+export HOSTNAME=`/bin/hostname`
 export USER=root
 export HOME=root
 export LOGNAME=root
 #export PS1='[\u@\h=\W]#'
-export PS1="[$USER@$HOSTNAME \W]\#'
+export PS1="[$USER@$HOSTNAME \W]\#"
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 LD_LIBRARY_PATH=/lib:/usr/lib:$LD_LIBRARY_PATH
