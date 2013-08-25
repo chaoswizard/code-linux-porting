@@ -25,21 +25,29 @@ class CRootFs(object):
         self.name = fstype
         self.path = name + self.stamp + '.' + self.name
         self.root = ""
-        self.workdir = 'fs_utils'
+        self.tooldir = 'fs_utils'
+        self.datadir = 'rootfs'
         mydebug('Init rootfs')
 
     def set_rootdir(self, path):
         "set root fs top dircetory"
-        if (not os.path.isdir(path)) or (not os.path.exists(path)):
+        self.root = self.datadir + dirsep + path
+        if (not os.path.isdir(self.root)) or (not os.path.exists(self.root)):
             return False
-        self.root = path
+        
         return True
     def get_rootdir(self):
         return self.root
 
-    def get_workdir(self):
-        return self.workdir
-    
+    def get_tooldir(self):
+        return self.tooldir
+
+    def proc_cmd(self, cmd, args):
+        self.proc_str = self.tooldir + dirsep + cmd + ' ' + args
+        print 'proc:', self.proc_str
+        #subprocess.Popen(self.porc_str)
+        os.system(self.proc_str)
+        
     def info(self):
         print 'src path\t:',  self.get_rootdir()
         print 'dest path\t:', self.path
@@ -142,12 +150,7 @@ class RootFs(object):
         return super(self.cls_name, self.instance).set_rootdir(path)
 
     def make_fs(self):
-        self.cmd = super(self.cls_name, self.instance).get_workdir() + dirsep + \
-                   self.instance.get_cmd()
-        self.arg = self.instance.get_arg()
-        print 'proc:', self.cmd, ' ', self.arg
-        #subprocess.Popen(self.cmd + ' ' + self.arg)
-        os.system(self.cmd + ' ' + self.arg)
+        super(self.cls_name, self.instance).proc_cmd(self.instance.get_cmd(), self.instance.get_arg())
         
     def dump(self, dump_name):
         print dump_name
