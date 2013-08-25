@@ -1,8 +1,21 @@
-#!/bin/sh
+#! /bin/sh
 
-echo "welcome elvonzion!"
-mount -a
-mkdir /dev/pts
-mount -t devpts devpts /dev/pts
+echo "mount all file system..."
+/bin/mount -av
+
+runlevel=S
+prevlevel=N
+umask 022
+export runlevel prevlevel
+
+echo "starting mdev..."
 echo /sbin/mdev > /proc/sys/kernel/hotplug
 mdev -s
+
+ln -sf /proc/mounts /etc/mtab
+
+echo "**************************"
+echo "    Love Linux ! ! ! "
+echo "**************************"
+
+/bin/hostname -F /etc/sysconfig/HOSTNAME
