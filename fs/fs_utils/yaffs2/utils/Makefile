@@ -16,7 +16,8 @@
 
 #KERNELDIR = /usr/src/kernel-headers-2.4.18
 
-CFLAGS =    -O2 -Wall -DCONFIG_YAFFS_UTIL
+CFLAGS =   -O2 -Wall -DCONFIG_YAFFS_UTIL
+CFLAGS+=   -DCONFIG_YAFFS_YAFFS2  -DCONFIG_YAFFS_DEFINES_TYPES
 CFLAGS+=   -Wshadow -Wpointer-arith -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations
 CFLAGS+=   -Wmissing-prototypes -Wredundant-decls -Wnested-externs -Winline
 
