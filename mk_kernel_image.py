@@ -24,7 +24,7 @@ class CKerImage(object):
         self.stamp = time.strftime("%Y%m%d%H%M%S")
         self.name = imgtype
         self.path = name + self.stamp + '.' + self.name
-        self.tools_dir = 'my_utils'
+        self.tools_dir = 'my-utils'
         self.ker = 'arch' + dirsep + 'arm' + dirsep + 'boot' +\
                        dirsep + 'zImage'
         self.ver = 'Elvon-3.9'
@@ -35,12 +35,10 @@ class CKerImage(object):
     def set_kerdir(self, path):
         "set kernel build top dircetory"
         self.src = path + dirsep + self.ker
-        if (not os.path.isdir(self.src)) or (not os.path.exists(self.src)):
+        if (not os.path.isfile(self.src)) or (not os.path.exists(self.src)):
            return False
         
         return True
-    def get_src(self):
-        return self.src
 
     def proc_cmd(self, cmd, args):
         self.proc_str = cmd + ' ' + args
@@ -61,7 +59,7 @@ class CUImage(CKerImage):
         super(CUImage, self).__init__(name, 'uImage')
         mydebug('Init image for uboot')
     def get_cmd(self):
-        return self.tools_dir + dirsep + 'mkUimage'
+        return self.tools_dir + dirsep + 'mk_uImage'
     def get_arg(self):
         return  '-n ' + self.ver + ' ' + \
                 '-A arm -O linux -T kernel -C none' + ' ' + \
