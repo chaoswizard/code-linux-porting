@@ -13,6 +13,9 @@ linesep = os.linesep
 dirsep = os.sep
 
 
+#is verbose mode
+debug = False
+
 #rootfs class, base is object
 class CKerImage(object):
     """
@@ -41,8 +44,10 @@ class CKerImage(object):
         return True
 
     def proc_cmd(self, cmd, args):
+        global debug 
         self.proc_str = cmd + ' ' + args
-        print 'proc:', self.proc_str
+        if debug:
+            print 'proc:', self.proc_str
         #subprocess.Popen(self.porc_str)
         os.system(self.proc_str)
         
@@ -98,7 +103,7 @@ opt_long_tbl = ["help", "type=", "dir="]
 
 #usage string for tips
 usage_str = '[options] -t type -d dir' + linesep +\
-            '\t-t, --type=name\timage type' + linesep +\
+            '\t-t, --type=name\t\timage type' + linesep +\
             '\t     support list:' + str(support_img_tbl.keys()) +linesep +\
             '\t-d, --dir=directory\tkernel build top directory' + linesep +\
             '\t-v\t\t\tverbose mode' + linesep +\
@@ -108,8 +113,6 @@ usage_str = '[options] -t type -d dir' + linesep +\
 
 
 
-#is verbose mode
-debug = False
 
 #my debug fucntion
 def mydebug(*arglist, **argdict):
@@ -199,7 +202,8 @@ def main():
                 usage()
                 return 0
         
-            mykerimage.dump("elvon dump:")
+            if debug: 
+                mykerimage.dump("elvon dump:")
             mykerimage.make_image()
             
         
