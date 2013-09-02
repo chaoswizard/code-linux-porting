@@ -73,7 +73,7 @@ $(obj)start.S:
 # from board directory
 $(obj)lowlevel_init.S:
 	@rm -f $@
-	@ln -s $(TOPDIR)/board/friendlyarm/mini2440/lowlevel_init.S $@
+	@ln -s $(TOPDIR)/arch/arm/cpu/arm920t/s3c24x0/lowlevel_init.S $@
 
 # from nand_spl directory
 $(obj)nand_boot.c:

@@ -170,12 +170,17 @@ struct s3c2440_nand {
 	u32	nfcmd;
 	u32	nfaddr;
 	u32	nfdata;
-	u32	nfeccd0;
-	u32	nfeccd1;
+	u32  	nfmeccd0;
+	u32     nfmeccd1;
 	u32	nfeccd;
 	u32	nfstat;
-	u32	nfstat0;
-	u32	nfstat1;
+	u32	nfestat0;
+	u32	nfestat1;
+	u32  	nfmecc0;
+	u32  	nfmecc1;
+	u32  	nfsecc;
+	u32  	nfsblk;
+	u32  	nfeblk;
 };
 #endif
 
