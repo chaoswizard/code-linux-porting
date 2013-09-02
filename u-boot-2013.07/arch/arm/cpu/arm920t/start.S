@@ -172,13 +172,52 @@ copyex:
 	ldr	r1, =0x3ff
 	ldr	r0, =INTSUBMSK
 	str	r1, [r0]
+# elif defined(CONFIG_S3C2440)
+	ldr r1, =0x7fff
+	ldr r0, =INTSUBMSK
+	str r1, [r0]
 # endif
 
+# if defined(CONFIG_S3C2440)
+
+#define CLK_CTL_BASE   	(0x4C000000)	
+#define MDIV_405	    (0x7f << 12	)
+#define PSDIV_405  	    (0x21)
+
+	/*	
+	 * FCLK:HCLK:PCLK = 1:4:8  
+	 * because we will set fclk, hclk, pclk, work in different speed,  
+	 * the CLKDIVEN should be changed, and the C15 should be set  
+	 * please see Chapter 7 Page 9	
+	 */  
+	ldr r0, =CLKDIVN
+	mov r1, #5
+	str r1, [r0]
+
+	/*	
+	 * orr	r0, r0, #R1_nF:OR:R1_iA  
+	 * This strange thing comes from the C15 co-processor  
+	 */  
+	mrc p15, 0, r1, c1, c0, 0	
+	orr r1, r1, #0xc0000000 	
+	mcr p15, 0, r1, c1, c0, 0	
+
+
+	/*	
+	 * set mpll to 405Mhz, see C7P21  
+	 */  
+	mov	r1, #CLK_CTL_BASE	
+	mov	r2, #MDIV_405	
+	add	r2, r2, #PSDIV_405	
+	str r2, [r1, #0x04] 	/* MPLLCON = CLK_BASE+4  */
+
+# else
 	/* FCLK:HCLK:PCLK = 1:2:4 */
 	/* default FCLK is 120 MHz ! */
 	ldr	r0, =CLKDIVN
 	mov	r1, #3
 	str	r1, [r0]
+# endif
 #endif	/* CONFIG_S3C24X0 */
 
 	/*
