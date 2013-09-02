@@ -32,6 +32,7 @@ COBJS-y	+= timer.o
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS-y:.o=.c)
 OBJS	:= $(addprefix $(obj),$(SOBJS) $(COBJS-y))
+SOBJS	:= lowlevel_init.o
 
 all:	$(obj).depend $(LIB)
 
