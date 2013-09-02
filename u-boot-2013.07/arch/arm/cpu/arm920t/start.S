@@ -39,6 +39,7 @@
 
 .globl _start
 _start:	b	start_code
+#if defined(CONFIG_INTERRUPTS)
 	ldr	pc, _undefined_instruction
 	ldr	pc, _software_interrupt
 	ldr	pc, _prefetch_abort
@@ -54,7 +55,9 @@ _data_abort:		.word data_abort
 _not_used:		.word not_used
 _irq:			.word irq
 _fiq:			.word fiq
-
+#else
+  . = _start + 64
+#endif
 	.balignl 16,0xdeadbeef
 
 
@@ -186,8 +189,9 @@ copyex:
 	bl	cpu_init_crit
 #endif
 
+#if !defined(CONFIG_NAND_SPL) //for compile error
 	bl	_main
-
+#endif
 /*------------------------------------------------------------------------------*/
 
 	.globl	c_runtime_cpu_setup
@@ -247,6 +251,7 @@ cpu_init_crit:
  *************************************************************************
  */
 
+#if defined(CONFIG_INTERRUPTS)
 @
 @ IRQ stack frame.
 @
@@ -401,3 +406,4 @@ fiq:
 	bl	do_fiq
 
 #endif
+#endif 

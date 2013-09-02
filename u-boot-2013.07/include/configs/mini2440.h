@@ -35,7 +35,14 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_SYS_TEXT_BASE 0x0
+
+#define NANDFLASH_BOOT
+
+#ifndef CONFIG_NAND_SPL     
+#define CONFIG_INTERRUPTS  
+#define CONFIG_SYS_TEXT_BASE   0x33000000
+#endif
+
 #define CONFIG_S3C2440_GPIO
 
 /*
@@ -150,6 +157,38 @@
  * DRAM is not init
  */
 #define CONFIG_SYS_INIT_SP_ADDR		(0x40001000 - GENERATED_GBL_DATA_SIZE)
+
+/*-----------------------------------------------------------------------
+ * Nand FLASH organization
+ * FLASH and environment organization
+ */
+#if defined(NANDFLASH_BOOT) || defined(CONFIG_NAND_SPL) || defined(CONFIG_CMD_NAND)
+#define CONFIG_NAND_S3C2440
+#endif
+
+#define CONFIG_S3C2440_NAND_HWECC
+#define CONFIG_SYS_S3C2440_NAND_HWECC
+#define CONFIG_SYS_MAX_NAND_DEVICE	1
+#define CONFIG_SYS_NAND_BASE		0x4E000000
+
+#define CONFIG_SYS_NAND_U_BOOT_DST	0x33000000			/* NUB load-addr */
+#define CONFIG_SYS_NAND_U_BOOT_START	CONFIG_SYS_NAND_U_BOOT_DST	/* NUB start-addr */
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	(4 * 1024)      		/* Offset to RAM U-Boot image */
+#define CONFIG_SYS_NAND_U_BOOT_SIZE	0x80000  			/* Size of RAM U-Boot image */
+#define CONFIG_SYS_NAND_PAGE_SIZE	2048
+#define CONFIG_SYS_NAND_BLOCK_SIZE	(128 * 1024)
+#define CONFIG_SYS_NAND_PAGE_COUNT	64
+#define CONFIG_SYS_NAND_BAD_BLOCK_POS	0
+#define CONFIG_SYS_NAND_5_ADDR_CYCLE
+#define CONFIG_SYS_NAND_ECCSIZE		CONFIG_SYS_NAND_PAGE_SIZE
+#define CONFIG_SYS_NAND_ECCBYTES	4
+#define CONFIG_SYS_NAND_ECCSTEPS	(CONFIG_SYS_NAND_PAGE_SIZE/CONFIG_SYS_NAND_ECCSIZE)
+#define CONFIG_SYS_NAND_OOBSIZE		64
+#define CONFIG_SYS_NAND_ECCTOTAL	(CONFIG_SYS_NAND_ECCBYTES*CONFIG_SYS_NAND_ECCSTEPS)
+#define CONFIG_SYS_NAND_ECCPOS		{40, 41, 42, 43, 44, 45, 46, 47, \
+					48, 49, 50, 51, 52, 53, 54, 55, \
+					56, 57, 58, 59, 60, 61, 62, 63}
+
 
 /*
  * NOR FLASH organization
