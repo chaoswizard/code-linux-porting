@@ -38,10 +38,7 @@
 
 #define NANDFLASH_BOOT
 
-#ifndef CONFIG_NAND_SPL     
-#define CONFIG_INTERRUPTS  
-#define CONFIG_SYS_TEXT_BASE   0x33000000
-#endif
+
 
 #define CONFIG_S3C2440_GPIO
 
@@ -56,17 +53,31 @@
 #define MACH_TYPE_MINI2440	1999
 #define CONFIG_MACH_TYPE	MACH_TYPE_MINI2440
 
+#define CONFIG_SYS_ARM_CACHE_WRITETHROUGH
+
+#define CONFIG_BOARD_EARLY_INIT_F
+
+#undef CONFIG_USE_IRQ		/* we don't need IRQ/FIQ stuff */
+
+#ifdef CONFIG_NAND_SPL     
+
+#else
+#define CONFIG_INTERRUPTS  
 /*
  * We don't use lowlevel_init
  */
 #define CONFIG_SKIP_LOWLEVEL_INIT
-#define CONFIG_BOARD_EARLY_INIT_F
+/*wx: 0x33000000->0x34000000 (48M:16M)*/
+#define CONFIG_SYS_TEXT_BASE   0x33000000
+#endif
+
 
 /*
  * input clock of PLL
  */
 /* MINI2440 has 12.0000MHz input clock */
 #define CONFIG_SYS_CLK_FREQ	12000000
+#define CONFIG_RTC_S3C24X0
 
 /*
  * Size of malloc() pool
@@ -86,7 +97,7 @@
  * select serial console configuration
  */
 #define CONFIG_S3C24X0_SERIAL
-#define CONFIG_SERIAL1
+#define CONFIG_SERIAL1		1	/* we use SERIAL 1 on mini2440 */
 
 /*
  * allow to overwrite serial and ethaddr
@@ -173,10 +184,13 @@
 
 #define CONFIG_SYS_NAND_U_BOOT_DST	0x33000000			/* NUB load-addr */
 #define CONFIG_SYS_NAND_U_BOOT_START	CONFIG_SYS_NAND_U_BOOT_DST	/* NUB start-addr */
-#define CONFIG_SYS_NAND_U_BOOT_OFFS	(4 * 1024)      		/* Offset to RAM U-Boot image */
-#define CONFIG_SYS_NAND_U_BOOT_SIZE	0x80000  			/* Size of RAM U-Boot image */
-#define CONFIG_SYS_NAND_PAGE_SIZE	2048
-#define CONFIG_SYS_NAND_BLOCK_SIZE	(128 * 1024)
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	 (4 << 10)      		/* Offset to RAM U-Boot image */
+#define CONFIG_SYS_NAND_U_BOOT_SIZE	 (512 << 10) 			/* Size of RAM U-Boot image */
+
+
+
+#define CONFIG_SYS_NAND_PAGE_SIZE	(2 << 10)
+#define CONFIG_SYS_NAND_BLOCK_SIZE	(128 << 10)
 #define CONFIG_SYS_NAND_PAGE_COUNT	64
 #define CONFIG_SYS_NAND_BAD_BLOCK_POS	0
 #define CONFIG_SYS_NAND_5_ADDR_CYCLE

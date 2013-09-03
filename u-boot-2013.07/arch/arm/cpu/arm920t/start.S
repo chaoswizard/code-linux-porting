@@ -151,7 +151,7 @@ copyex:
 #  define pWTCON	0x15300000
 #  define INTMSK	0x14400008	/* Interrupt-Controller base addresses */
 #  define CLKDIVN	0x14800014	/* clock divisor register */
-#else
+# else
 #  define pWTCON	0x53000000
 #  define INTMSK	0x4A000008	/* Interrupt-Controller base addresses */
 #  define INTSUBMSK	0x4A00001C
@@ -228,9 +228,22 @@ copyex:
 	bl	cpu_init_crit
 #endif
 
-#if !defined(CONFIG_NAND_SPL) //for compile error
+#if defined(CONFIG_NAND_SPL)
+    /*wx:temp stack for call c function, nand_boot*/
+	ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20)) @wx: this address must in dram valid area
+	bic sp, sp, #7 /* 8-byte alignment for ABI compliance */
+	@ load U-Boot to RAM
+	ldr r0, =CONFIG_SYS_TEXT_BASE
+	ldr     r0, _nand_boot_ofs
+	mov	pc, r0
+
+_nand_boot_ofs:
+	.word nand_boot
+# else
+	adr	r0, _start
+	bl relocate_code
 	bl	_main
-#endif
+# endif
 /*------------------------------------------------------------------------------*/
 
 	.globl	c_runtime_cpu_setup

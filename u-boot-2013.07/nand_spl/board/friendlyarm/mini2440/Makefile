@@ -45,7 +45,8 @@ OBJS	:= $(addprefix $(obj),$(SOBJS) $(COBJS))
 __OBJS	:= $(SOBJS) $(COBJS)
 LNDIR	:= $(nandobj)board/$(BOARDDIR)
 
-ALL	= $(nandobj)u-boot-spl $(nandobj)u-boot-spl.bin $(nandobj)u-boot-spl-16k.bin
+#ALL	= $(nandobj)u-boot-spl $(nandobj)u-boot-spl.bin $(nandobj)u-boot-spl-16k.bin
+ALL	= $(nandobj)u-boot-spl $(nandobj)u-boot-spl.bin $(nandobj)u-boot-spl-16k.bin $(nandobj)u-boot-spl.dis
 
 all:	$(obj).depend $(ALL)
 
@@ -54,6 +55,9 @@ $(nandobj)u-boot-spl-16k.bin: $(nandobj)u-boot-spl
 
 $(nandobj)u-boot-spl.bin:	$(nandobj)u-boot-spl
 	$(OBJCOPY) ${OBJCFLAGS} -O binary $< $@
+
+$(nandobj)u-boot-spl.dis:	$(nandobj)u-boot-spl
+	$(OBJDUMP) -d $< > $@
 
 $(nandobj)u-boot-spl:	$(OBJS) $(nandobj)u-boot.lds
 	cd $(LNDIR) && $(LD) $(LDFLAGS) $(__OBJS) \
