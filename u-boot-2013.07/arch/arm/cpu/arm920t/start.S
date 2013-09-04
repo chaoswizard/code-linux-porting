@@ -256,6 +256,7 @@ c_runtime_cpu_setup:
  * usage: debug_ll(count)
  * param count: flash times
  */
+	.globl debug_ll
 debug_ll:
 # define GPIO_CTL_BASE 0x56000000
 # define oGPIO_B 0x10
@@ -308,7 +309,6 @@ led_spk_delay:
 	bne led_spk_loop
 # endif
 	mov	pc, lr
-
 # endif
 
 /*
