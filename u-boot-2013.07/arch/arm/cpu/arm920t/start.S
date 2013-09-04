@@ -28,6 +28,12 @@
 #include <common.h>
 #include <config.h>
 
+#undef DEBUG_LL
+# if defined(CONFIG_DEBUG_LL)
+# define DEBUG_LL(t)  	mov r0, t;bl debug_ll
+# else
+# define DEBUG_LL(t)  	
+# endif
 /*
  *************************************************************************
  *
@@ -228,7 +234,7 @@ copyex:
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	bl	cpu_init_crit
 #endif
-
+	DEBUG_LL(#3);
 #if defined(CONFIG_NAND_SPL)
     /*wx:temp stack for call c function, nand_boot*/
 	ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20)) @wx: this address must in dram valid area
@@ -258,6 +264,7 @@ c_runtime_cpu_setup:
  */
 	.globl debug_ll
 debug_ll:
+	mov	ip, lr
 # define GPIO_CTL_BASE 0x56000000
 # define oGPIO_B 0x10
 
@@ -279,35 +286,49 @@ debug_ll:
 	@ [5:8]=1110 (1:disable pullup)
 	ldr	r2, =0x1ff
 	str	r2, [r1, #oGPIO_UP]
+	
 led_spk_loop:
 	mov	r2, #0
-	str	r2, [r1, #oGPIO_DAT]
-	@delay 
-	mov r3, #(8<<10)
-led_spk_delay:
-	mov r2, #(8<<10)
-0:
-	sub r2, r2, #1
-	cmp r2, #0
-	nop
-	nop
-	nop
-	bne 0b
-	sub r3, r3, #1
-	cmp r3, #0
-   bne led_spk_delay
-	mov	r2, #0
 # if defined(CONFIG_MINI2440_LED)
-	add r2, r2,#LED_SPK_VAL(0, 0, 0, 1, 0)
+	add	r2, r2,#LED_SPK_VAL(1, 1, 1, 1, 0)
 # endif
 # if defined(CONFIG_MINI2440_SPEAKER)
-	add r2, r2,#LED_SPK_VAL(0, 0, 0, 0, 1)
+	add	r2, r2,#LED_SPK_VAL(0, 0, 0, 0, 1)
 # endif
 	str	r2, [r1, #oGPIO_DAT]
+	@delay 
+	mov r3, #(2<<10)
+	bl debug_delay_ll
+@ close led and speaker
+	mov	r2, #0
+@ open one led
+# if defined(CONFIG_MINI2440_LED)
+	add	r2, r2,#LED_SPK_VAL(0, 1, 0, 0, 0)
+# endif
+	str	r2, [r1, #oGPIO_DAT]
+	mov r3, #(1<<10)
+	bl debug_delay_ll
 	sub r0, r0, #1
 	cmp r0, #0
 	bne led_spk_loop
+	mov r3, #(4<<10)
+	bl debug_delay_ll
 # endif
+	mov	lr, ip
+	mov	pc, lr
+
+	@delay ms
+debug_delay_ll:
+0:
+	mov r2, #(8<<10)
+1:
+	sub r2, r2, #1
+	cmp r2, #0
+	nop
+	bne 1b
+	sub r3, r3, #1
+	cmp r3, #0
+   bne 0b
 	mov	pc, lr
 # endif
 

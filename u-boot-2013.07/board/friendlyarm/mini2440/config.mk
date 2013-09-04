@@ -6,10 +6,9 @@
 # (C) Copyright 2008
 # Guennadi Liakhovetki, DENX Software Engineering, <lg@denx.de>
 #
-# (C) Copyright 2013 pingfengluo.github.com
 # pingfengluo@gmail.com
 #
 
 sinclude $(OBJTREE)/board/$(BOARDDIR)/config.tmp
 
-CONFIG_SYS_TEXT_BASE =  0x33000000
+CONFIG_SYS_TEXT_BASE =  0x30000000

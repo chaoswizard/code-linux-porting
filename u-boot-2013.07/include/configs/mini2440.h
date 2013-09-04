@@ -45,9 +45,18 @@
 #define CONFIG_ENV_IS_IN_FLASH
 #endif
 
-#define CONFIG_DEBUG_LL
-#define CONFIG_MINI2440_LED
-#define CONFIG_MINI2440_SPEAKER
+//#define CONFIG_DEBUG_LL
+//#define CONFIG_MINI2440_LED
+//#define CONFIG_MINI2440_SPEAKER
+//#define CONFIG_MTD_DEBUG
+//#define CONFIG_MTD_DEBUG_VERBOSE 3
+
+#ifdef CONFIG_DEBUG_LL
+#define DEBUG_LL(x)   debug_ll(x)
+#else
+#define DEBUG_LL(x)
+#endif
+
 /*
  * High Level Configuration Options
  */
@@ -194,8 +203,6 @@
 #define CONFIG_SYS_NAND_U_BOOT_SIZE	 (512 << 10) 			/* Size of RAM U-Boot image */
 #endif
 
-#define CONFIG_MTD_DEBUG
-#define CONFIG_MTD_DEBUG_VERBOSE 3
 
 #define CONFIG_NAND_S3C2440
 #define CONFIG_S3C2440_NAND_HWECC
@@ -307,19 +314,22 @@
 #define CONFIG_ZERO_BOOTDELAY_CHECK
 
 /* configure for boot application */
+//wx: enable the nand defalut partition manage 
+#define MTDIDS_DEFAULT "nand0=nandflash0"
+//wx: define the defalut nand partion configure,
+/** wx: !NOTE: 
+* MUST make sure the offset of root partition same as the target system(linux-kernel defined)
+* Here Skip (params) partition, and need not care about the offset because it be
+* included in bootloader partition.
+*/
+#define MTDPARTS_DEFAULT "mtdparts=nandflash0:4M@0(uboot+params)," \
+                         "4M(kernel_uImage)," \
+                         "-(rootfs)"
 /*----------mtd config must refer as image layout table---------------*/
 #define CONFIG_BOOTARGS_YAFFS         	\
 	"root=/dev/mtdblock2 rw "\
 	"rootfstype=yaffs "\
 	"noinitrd "\
-	"console=ttySAC0,115200 "\
-	"init=/linuxrc"
-
-/*----------------------------------------------------------------------------*/
-#define CONFIG_BOOTARGS_RAMDISK        	\
-	"initrd=0x31000000,0x400000 "\
-	"mem=64M "\
-	"root=/dev/ram rw "\
 	"console=ttySAC0,115200 "\
 	"init=/linuxrc"
 /*----------------------------------------------------------------------------*/
@@ -329,6 +339,13 @@
 	"console=ttySAC0,115200 "\
 	"noinitrd "\
 	"mem=64M "\
+	"init=/linuxrc"
+/*----------------------------------------------------------------------------*/
+#define CONFIG_BOOTARGS_RAMDISK        	\
+	"initrd=0x31000000,0x400000 "\
+	"mem=64M "\
+	"root=/dev/ram rw "\
+	"console=ttySAC0,115200 "\
 	"init=/linuxrc"
 /*----------------------------------------------------------------------------*/
 /* ramfs  use init instead of linuxrc */
@@ -347,60 +364,48 @@
 #define CONFIG_SERVERIP 	192.168.9.2
 #define CONFIG_GATEWAYIP    192.168.9.2
 
-
-
-/*---------------- default filename on ftp server --------------------*/
-#define  IMG_UBOOT_PATH      "u-boot.bin"
-#define  IMG_KERNEL_PATH     "uImage"
-#define  IMG_ROOTFS_PATH     "rootfs.img"
-
 /* 
  * command string
- * usage: run 'cmdname' on console cmdline.
+ * usage: input  "run <cmdname>" on console cmdline.
  */
-/*-------------------boot kernel mode -------------------------------*/
-#define BOOT_KERN_FROM_NAND_COMMAND  \
-       "nand read " __stringify(CONFIG_SYS_LOAD_ADDR) " " __stringify(IMG_KERNEL_OFFSET) " " __stringify(IMG_KERNEL_SIZE)\
-       ";bootm" " " __stringify(CONFIG_SYS_LOAD_ADDR)
-
-#define BOOT_KERN_FROM_TFTP_COMMAND  \
-       "tftp " __stringify(CONFIG_SYS_LOAD_ADDR) " " IMG_KERNEL_PATH\
-       ";bootm" " " __stringify(CONFIG_SYS_LOAD_ADDR)
+/*----------------------------------------------------------------------------*/
+#define CONFIG_EXTRA_ENV_SETTINGS					\
+	"u-boot-ofs="  __stringify(IMG_UBOOT_OFFSET) "\0"	\
+	"u-boot_size=" __stringify(IMG_UBOOT_SIZE) "\0"	\
+	"kernel_ofs="  __stringify(IMG_KERNEL_OFFSET) "\0"	\
+	"kernel_size=" __stringify(IMG_KERNEL_SIZE) "\0"	\
+	"rootfs_ofs="  __stringify(IMG_ROOTFS_OFFSET) "\0"	\
+	"u-boot=u-boot.bin\0"	\
+	"kernel=uimage.bin\0"	\
+	"rootfs=rootfs.bin\0"	\
+       "boot-kernel-nand=nand read ${loadaddr} ${kernel_ofs} ${kernel_size};"\
+       	"bootm ${loadaddr}\0"\
+	"boot-kernel-tftp=tftp ${loadaddr} ${kernel}; "	\
+	 	"bootm ${loadaddr}\0"	\
+	"tftp2nand-uboot=tftp ${loadaddr} ${u-boot};"	\
+        	"nand erase ${u-boot-ofs} ${filesize};"	\
+        	"nand write ${fileaddr} ${u-boot-ofs} ${filesize}\0"	\
+	"tftp2nand-kernel=tftp ${loadaddr} ${kernel};"	\
+        	"nand erase ${kernel_ofs} ${filesize};"	\
+        	"nand write ${fileaddr} ${kernel_ofs} ${filesize}\0"	\
+	"tftp2nand-rootfs=tftp ${loadaddr} ${rootfs};"	\
+        	"nand erase ${rootfs_ofs} ${filesize};"	\
+        	"nand write.yaffs ${fileaddr} ${rootfs_ofs} ${filesize}\0"	\
+	"nand-erase-env=nand erase " __stringify(IMG_PARAM_OFFSET)" " __stringify(IMG_PARAM_SIZE) "\0"\
+	"set-args-yaffs=setenv bootargs "  CONFIG_BOOTARGS_YAFFS "\0"\
+	"set-args-ramdisk=setenv bootargs " CONFIG_BOOTARGS_RAMDISK "\0"\
+	"set-args-cramfs=setenv bootargs " CONFIG_BOOTARGS_CRAMFS "\0"\
+	"set-args-ramfs=setenv bootargs " CONFIG_BOOTARGS_RAMFS "\0"\
+	""
 
 /*---------------- boot default -------------------------------------*/
-#define CONFIG_BOOTARGS    CONFIG_BOOTARGS_YAFFS
-#define CONFIG_BOOTCOMMAND BOOT_KERN_FROM_TFTP_COMMAND
-/*-------------------install image to nand---------------------------*/
-#define TFTP_TO_NAND_UBOOT_COMMAND  \
-        "tftp " __stringify(CONFIG_SYS_LOAD_ADDR)  " " IMG_UBOOT_PATH\
-        ";nand erase " __stringify(IMG_UBOOT_OFFSET) "  $filesize"\
-        ";nand write $fileaddr"  " " __stringify(IMG_UBOOT_OFFSET) " $filesize"
+#define CONFIG_BOOTARGS	CONFIG_BOOTARGS_YAFFS
+#define CONFIG_BOOTCOMMAND	"run boot-kernel-nand"
 
-#define TFTP_TO_NAND_KERNEL_COMMAND  \
-        "tftp " __stringify(CONFIG_SYS_LOAD_ADDR) " " IMG_KERNEL_PATH\
-        ";nand erase " __stringify(IMG_KERNEL_OFFSET) "  $filesize"\
-        ";nand write $fileaddr"  " " __stringify(IMG_KERNEL_OFFSET) " $filesize"
-        
-#define TFTP_TO_NAND_ROOTFS_COMMAND  \
-        "tftp " __stringify(CONFIG_SYS_LOAD_ADDR) " "IMG_ROOTFS_PATH\
-        ";nand erase " __stringify(IMG_ROOTFS_OFFSET) "  $filesize"\
-        ";nand write.yaffs  $fileaddr " __stringify(IMG_ROOTFS_OFFSET) " $filesize"
 
-/*------------------erase env on nand ------------------------------*/
-#define ERASE_PARAM_ON_NAND_COMMAND  \
-        "nand erase " __stringify(IMG_PARAM_OFFSET) "  "__stringify(IMG_PARAM_SIZE)
 
-/*-------------------- set boot args -------------------------------*/
-#define SET_BOOTARGS_YAFFS_COMMAND  \
-    "setenv bootargs " CONFIG_BOOTARGS_YAFFS
 
-#define SET_BOOTARGS_RAMDISK_COMMAND  \
-    "setenv bootargs " CONFIG_BOOTARGS_RAMDISK
 
-#define SET_BOOTARGS_CRAMFS_COMMAND  \
-    "setenv bootargs " CONFIG_BOOTARGS_CRAMFS
 
-#define SET_BOOTARGS_RAMFS_COMMAND  \
-    "setenv bootargs " CONFIG_BOOTARGS_RAMFS
-/*----------------------------------------------------------------------------*/
+
 #endif	/* __CONFIG_H */

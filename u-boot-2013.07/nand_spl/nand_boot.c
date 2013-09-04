@@ -258,6 +258,7 @@ void nand_boot(void)
 	nand_info_t nand_info;
 	__attribute__((noreturn)) void (*uboot)(void);
 
+	DEBUG_LL(2);
 	/*
 	 * Init board specific nand support
 	 */
@@ -271,6 +272,7 @@ void nand_boot(void)
 	if (nand_chip.select_chip)
 		nand_chip.select_chip(&nand_info, 0);
 
+	DEBUG_LL(5);
 	/*
 	 * Load U-Boot image from NAND into RAM
 	 */

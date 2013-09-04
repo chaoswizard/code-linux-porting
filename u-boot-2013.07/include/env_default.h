@@ -137,36 +137,6 @@ const uchar default_environment[] = {
 #ifdef	CONFIG_EXTRA_ENV_SETTINGS
 	CONFIG_EXTRA_ENV_SETTINGS
 #endif
-#ifdef BOOT_KERN_FROM_NAND_COMMAND
-	"boot-kern-nand=" BOOT_KERN_FROM_NAND_COMMAND    "\0"
-#endif
-#ifdef BOOT_KERN_FROM_TFTP_COMMAND
-	"boot-kern-tftp=" BOOT_KERN_FROM_TFTP_COMMAND    "\0"
-#endif
-#ifdef TFTP_TO_NAND_UBOOT_COMMAND
-	"tftp2nand-uboot=" TFTP_TO_NAND_UBOOT_COMMAND    "\0"
-#endif
-#ifdef TFTP_TO_NAND_KERNEL_COMMAND
-	"tftp2nand-linux=" TFTP_TO_NAND_KERNEL_COMMAND    "\0"
-#endif
-#ifdef TFTP_TO_NAND_ROOTFS_COMMAND
-	"tftp2nand-yaffs=" TFTP_TO_NAND_ROOTFS_COMMAND    "\0"
-#endif
-#ifdef ERASE_PARAM_ON_NAND_COMMAND
-	"nand-erase-env=" ERASE_PARAM_ON_NAND_COMMAND    "\0"
-#endif
-#ifdef SET_BOOTARGS_YAFFS_COMMAND
-	"set-args-yaffs=" SET_BOOTARGS_YAFFS_COMMAND    "\0"
-#endif
-#ifdef SET_BOOTARGS_RAMDISK_COMMAND
-	"set-args-ramdisk=" SET_BOOTARGS_RAMDISK_COMMAND    "\0"
-#endif
-#ifdef SET_BOOTARGS_CRAMFS_COMMAND
-	"set-args-cramfs=" SET_BOOTARGS_CRAMFS_COMMAND    "\0"
-#endif
-#ifdef SET_BOOTARGS_RAMFS_COMMAND
-	"set-args-ramfs=" SET_BOOTARGS_RAMFS_COMMAND    "\0"
-#endif
 	"\0"
 #ifdef DEFAULT_ENV_INSTANCE_EMBEDDED
 	}
