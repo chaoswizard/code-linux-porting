@@ -45,8 +45,9 @@
 #define CONFIG_ENV_IS_IN_FLASH
 #endif
 
-
-
+#define CONFIG_DEBUG_LL
+#define CONFIG_MINI2440_LED
+#define CONFIG_MINI2440_SPEAKER
 /*
  * High Level Configuration Options
  */

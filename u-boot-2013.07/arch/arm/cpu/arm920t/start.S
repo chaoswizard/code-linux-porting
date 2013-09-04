@@ -55,6 +55,7 @@ _data_abort:		.word data_abort
 _not_used:		.word not_used
 _irq:			.word irq
 _fiq:			.word fiq
+_pad:        .word 0x738b7199 /* now 16*4=64 */
 #else
   . = _start + 64
 #endif
@@ -249,6 +250,66 @@ _nand_boot_ofs:
 c_runtime_cpu_setup:
 
 	mov	pc, lr
+
+# if defined(CONFIG_DEBUG_LL)
+/*
+ * usage: debug_ll(count)
+ * param count: flash times
+ */
+debug_ll:
+# define GPIO_CTL_BASE 0x56000000
+# define oGPIO_B 0x10
+
+# define oGPIO_CON 0x0
+# define oGPIO_DAT 0x4
+# define oGPIO_UP 0x8
+/*
+ * a,b,c,d: led1-led4 ==> GPIO_B[8:5]
+ * s:speaker          ==> GPIO_B[0]
+ */
+#define LED_SPK_VAL(a,b,c,d,s) (((a)<<8) | ((b)<<7) | ((c)<<6) | ((d)<<5) | ((s)<<0))
+/*LED for debug*/
+# if defined(CONFIG_MINI2440_LED) || defined(CONFIG_MINI2440_SPEAKER)
+	mov	r1, #GPIO_CTL_BASE
+	@ [10:17]=01010101,set as gpio
+	add	r1, r1, #oGPIO_B
+	ldr	r2, =0x295551
+	str	r2, [r1, #oGPIO_CON]
+	@ [5:8]=1110 (1:disable pullup)
+	ldr	r2, =0x1ff
+	str	r2, [r1, #oGPIO_UP]
+led_spk_loop:
+	mov	r2, #0
+	str	r2, [r1, #oGPIO_DAT]
+	@delay 
+	mov r3, #(8<<10)
+led_spk_delay:
+	mov r2, #(8<<10)
+0:
+	sub r2, r2, #1
+	cmp r2, #0
+	nop
+	nop
+	nop
+	bne 0b
+	sub r3, r3, #1
+	cmp r3, #0
+   bne led_spk_delay
+	mov	r2, #0
+# if defined(CONFIG_MINI2440_LED)
+	add r2, r2,#LED_SPK_VAL(0, 0, 0, 1, 0)
+# endif
+# if defined(CONFIG_MINI2440_SPEAKER)
+	add r2, r2,#LED_SPK_VAL(0, 0, 0, 0, 1)
+# endif
+	str	r2, [r1, #oGPIO_DAT]
+	sub r0, r0, #1
+	cmp r0, #0
+	bne led_spk_loop
+# endif
+	mov	pc, lr
+
+# endif
 
 /*
  *************************************************************************
