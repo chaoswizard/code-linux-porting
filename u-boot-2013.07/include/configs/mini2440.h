@@ -36,7 +36,16 @@
 #define __CONFIG_H
 
 
+#if 1
 #define CONFIG_USE_NAND
+#define CONFIG_SYS_NO_FLASH
+#define CONFIG_ENV_IS_IN_NAND
+#else
+#define CONFIG_USE_NOR
+#define CONFIG_ENV_IS_IN_FLASH
+#endif
+
+
 
 /*
  * High Level Configuration Options
@@ -135,10 +144,6 @@
 /* boot parameters address */
 #define CONFIG_BOOT_PARAM_ADDR		0x30000100
 
-
-
-
-
 /*
  * Stack sizes
  * The stack sizes are set up in start.S using the settings below
@@ -214,13 +219,6 @@
 #define CONFIG_SYS_NAND_ECCPOS		{40, 41, 42, 43, 44, 45, 46, 47, \
 					48, 49, 50, 51, 52, 53, 54, 55, \
 					56, 57, 58, 59, 60, 61, 62, 63}
-
-/* environment organization*/
-#if defined(CONFIG_USE_NAND)
-#undef CONFIG_ENV_IS_IN_FLASH
-#define CONFIG_SYS_NO_FLASH
-#define CONFIG_ENV_IS_IN_NAND
-#endif
 #endif
 
 #if ! defined(CONFIG_SYS_NO_FLASH)
@@ -240,14 +238,6 @@
 /* 512 * 4096 sectors, or 32 * 64k blocks */
 #define CONFIG_SYS_MAX_FLASH_SECT	512
 #define CONFIG_FLASH_SHOW_PROGRESS  1
-
-/* environment organization*/
-#if defined(CONFIG_USE_NOR)
-#define CONFIG_ENV_IS_IN_FLASH
-#endif
-
-#else
-#undef CONFIG_CMD_IMLS
 #endif
 
 
