@@ -35,7 +35,7 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-
+/*wx: 0x33000000->0x34000000 (48M:16M)*/
 #if 1
 #define CONFIG_USE_NAND
 #define CONFIG_SYS_NO_FLASH
@@ -72,7 +72,6 @@
  * We don't use lowlevel_init
  */
 #define CONFIG_SKIP_LOWLEVEL_INIT
-/*wx: 0x33000000->0x34000000 (48M:16M)*/
 #endif
 
 
@@ -124,6 +123,8 @@
 #define CONFIG_CMD_REGINFO
 #define CONFIG_CMD_SAVES
 #define CONFIG_CMD_NAND
+#define CONFIG_CMD_NET
+#define CONFIG_CMD_PING
 /*
  * Miscellaneous configurable options
  */
@@ -137,12 +138,6 @@
 #define CONFIG_SYS_MEMTEST_START	   0x30000000	/* memtest works on */
 #define CONFIG_SYS_MEMTEST_END		0x34000000	/* 64 MB in DRAM */
 
-
-/* default load address	*/
-#define CONFIG_SYS_LOAD_ADDR		0x32000000
-
-/* boot parameters address */
-#define CONFIG_BOOT_PARAM_ADDR		0x30000100
 
 /*
  * Stack sizes
@@ -171,7 +166,7 @@
 /*
  * Stack should be on the SRAM because
  * DRAM is not init
-/*  wx:comment: start.s jump to c function use bleow stack address(must init before call c function)
+ *  wx:comment: start.s jump to c function use bleow stack address(must init before call c function)
  * the GENERATED_GBL_DATA_SIZA(global_data) is create by kbulid tools as in asm-offsets.c
  * ---------------------------------
  * |   (4K)=0x30001000
@@ -298,5 +293,113 @@
 #define CONFIG_AUTO_COMPLETE
 
 
+/* default load address by tftp, uart, usb*/
+#define CONFIG_SYS_LOAD_ADDR		0x30008000
 
+/* boot parameters address */
+#define CONFIG_BOOT_PARAM_ADDR		0x30000100
+
+/* autoboot */
+#define CONFIG_BOOTDELAY	9
+#define CONFIG_BOOT_RETRY_TIME	-1
+#define CONFIG_RESET_TO_RETRY
+#define CONFIG_ZERO_BOOTDELAY_CHECK
+
+/* configure for boot application */
+/*----------mtd config must refer as image layout table---------------*/
+#define CONFIG_BOOTARGS_YAFFS         	\
+	"root=/dev/mtdblock2 rw "\
+	"rootfstype=yaffs "\
+	"noinitrd "\
+	"console=ttySAC0,115200 "\
+	"init=/linuxrc"
+
+/*----------------------------------------------------------------------------*/
+#define CONFIG_BOOTARGS_RAMDISK        	\
+	"initrd=0x31000000,0x400000 "\
+	"mem=64M "\
+	"root=/dev/ram rw "\
+	"console=ttySAC0,115200 "\
+	"init=/linuxrc"
+/*----------------------------------------------------------------------------*/
+#define CONFIG_BOOTARGS_CRAMFS         	\
+	"root=/dev/mtdblock2 rw "\
+	"rootfstype=cramfs "\
+	"console=ttySAC0,115200 "\
+	"noinitrd "\
+	"mem=64M "\
+	"init=/linuxrc"
+/*----------------------------------------------------------------------------*/
+/* ramfs  use init instead of linuxrc */
+#define CONFIG_BOOTARGS_RAMFS         	\
+	"root=ramfs "\
+	"devfs=mount "\
+	"console=ttySAC0,115200"
+/*----------------------------------------------------------------------------*/
+
+/* tftp server configuration */
+//wx: the Head 3 bytes MUST is a valid Value,or else the MAC will set Failed.
+#define CONFIG_ETHADDR      12:34:56:85:09:09
+#define CONFIG_NETMASK	255.255.255.0
+//wx: because my wifi has used 192.168.0.X subnet, and I seted WLAN on 192.168.9.X subnet
+#define CONFIG_IPADDR	192.168.9.1
+#define CONFIG_SERVERIP 	192.168.9.2
+#define CONFIG_GATEWAYIP    192.168.9.2
+
+
+
+/*---------------- default filename on ftp server --------------------*/
+#define  IMG_UBOOT_PATH      "u-boot.bin"
+#define  IMG_KERNEL_PATH     "uImage"
+#define  IMG_ROOTFS_PATH     "rootfs.img"
+
+/* 
+ * command string
+ * usage: run 'cmdname' on console cmdline.
+ */
+/*-------------------boot kernel mode -------------------------------*/
+#define BOOT_KERN_FROM_NAND_COMMAND  \
+       "nand read " __stringify(CONFIG_SYS_LOAD_ADDR) " " __stringify(IMG_KERNEL_OFFSET) " " __stringify(IMG_KERNEL_SIZE)\
+       ";bootm" " " __stringify(CONFIG_SYS_LOAD_ADDR)
+
+#define BOOT_KERN_FROM_TFTP_COMMAND  \
+       "tftp " __stringify(CONFIG_SYS_LOAD_ADDR) " " IMG_KERNEL_PATH\
+       ";bootm" " " __stringify(CONFIG_SYS_LOAD_ADDR)
+
+/*---------------- boot default -------------------------------------*/
+#define CONFIG_BOOTARGS    CONFIG_BOOTARGS_YAFFS
+#define CONFIG_BOOTCOMMAND BOOT_KERN_FROM_TFTP_COMMAND
+/*-------------------install image to nand---------------------------*/
+#define TFTP_TO_NAND_UBOOT_COMMAND  \
+        "tftp " __stringify(CONFIG_SYS_LOAD_ADDR)  " " IMG_UBOOT_PATH\
+        ";nand erase " __stringify(IMG_UBOOT_OFFSET) "  $filesize"\
+        ";nand write $fileaddr"  " " __stringify(IMG_UBOOT_OFFSET) " $filesize"
+
+#define TFTP_TO_NAND_KERNEL_COMMAND  \
+        "tftp " __stringify(CONFIG_SYS_LOAD_ADDR) " " IMG_KERNEL_PATH\
+        ";nand erase " __stringify(IMG_KERNEL_OFFSET) "  $filesize"\
+        ";nand write $fileaddr"  " " __stringify(IMG_KERNEL_OFFSET) " $filesize"
+        
+#define TFTP_TO_NAND_ROOTFS_COMMAND  \
+        "tftp " __stringify(CONFIG_SYS_LOAD_ADDR) " "IMG_ROOTFS_PATH\
+        ";nand erase " __stringify(IMG_ROOTFS_OFFSET) "  $filesize"\
+        ";nand write.yaffs  $fileaddr " __stringify(IMG_ROOTFS_OFFSET) " $filesize"
+
+/*------------------erase env on nand ------------------------------*/
+#define ERASE_PARAM_ON_NAND_COMMAND  \
+        "nand erase " __stringify(IMG_PARAM_OFFSET) "  "__stringify(IMG_PARAM_SIZE)
+
+/*-------------------- set boot args -------------------------------*/
+#define SET_BOOTARGS_YAFFS_COMMAND  \
+    "setenv bootargs " CONFIG_BOOTARGS_YAFFS
+
+#define SET_BOOTARGS_RAMDISK_COMMAND  \
+    "setenv bootargs " CONFIG_BOOTARGS_RAMDISK
+
+#define SET_BOOTARGS_CRAMFS_COMMAND  \
+    "setenv bootargs " CONFIG_BOOTARGS_CRAMFS
+
+#define SET_BOOTARGS_RAMFS_COMMAND  \
+    "setenv bootargs " CONFIG_BOOTARGS_RAMFS
+/*----------------------------------------------------------------------------*/
 #endif	/* __CONFIG_H */
