@@ -51,10 +51,10 @@ static void nand_read_buf(struct mtd_info *mtd, u_char *buf, int len)
 }
 #endif
 
-static void S3C2440_hwcontrol(struct mtd_info *mtd, int cmd, unsigned int ctrl)
+static void s3c2440_hwcontrol(struct mtd_info *mtd, int cmd, unsigned int ctrl)
 {
 	struct nand_chip *chip = mtd->priv;
-	struct S3C2440_nand *nand = S3C2440_get_base_nand();
+	struct s3c2440_nand *nand = s3c2440_get_base_nand();
 
 	debug("hwcontrol(): 0x%02x 0x%02x\n", cmd, ctrl);
 
@@ -80,35 +80,35 @@ static void S3C2440_hwcontrol(struct mtd_info *mtd, int cmd, unsigned int ctrl)
 		writeb(cmd, chip->IO_ADDR_W);
 }
 
-static int S3C2440_dev_ready(struct mtd_info *mtd)
+static int s3c2440_dev_ready(struct mtd_info *mtd)
 {
-	struct S3C2440_nand *nand = S3C2440_get_base_nand();
+	struct s3c2440_nand *nand = s3c2440_get_base_nand();
 	debug("dev_ready\n");
 	return readl(&nand->nfstat) & 0x01;
 }
 
 #ifdef CONFIG_S3C2440_NAND_HWECC
-void S3C2440_nand_enable_hwecc(struct mtd_info *mtd, int mode)
+void s3c2440_nand_enable_hwecc(struct mtd_info *mtd, int mode)
 {
-	struct S3C2440_nand *nand = S3C2440_get_base_nand();
-	debug("S3C2440_nand_enable_hwecc(%p, %d)\n", mtd, mode);
+	struct s3c2440_nand *nand = s3c2440_get_base_nand();
+	debug("s3c2440_nand_enable_hwecc(%p, %d)\n", mtd, mode);
 	writel(readl(&nand->nfconf) | S3C2440_NFCONF_INITECC, &nand->nfconf);
 }
 
-static int S3C2440_nand_calculate_ecc(struct mtd_info *mtd, const u_char *dat,
+static int s3c2440_nand_calculate_ecc(struct mtd_info *mtd, const u_char *dat,
 				      u_char *ecc_code)
 {
-	struct S3C2440_nand *nand = S3C2440_get_base_nand();
+	struct s3c2440_nand *nand = s3c2440_get_base_nand();
 	ecc_code[0] = readb(&nand->nfecc);
 	ecc_code[1] = readb(&nand->nfecc + 1);
 	ecc_code[2] = readb(&nand->nfecc + 2);
-	debug("S3C2440_nand_calculate_hwecc(%p,): 0x%02x 0x%02x 0x%02x\n",
+	debug("s3c2440_nand_calculate_hwecc(%p,): 0x%02x 0x%02x 0x%02x\n",
 	       mtd , ecc_code[0], ecc_code[1], ecc_code[2]);
 
 	return 0;
 }
 
-static int S3C2440_nand_correct_data(struct mtd_info *mtd, u_char *dat,
+static int s3c2440_nand_correct_data(struct mtd_info *mtd, u_char *dat,
 				     u_char *read_ecc, u_char *calc_ecc)
 {
 	if (read_ecc[0] == calc_ecc[0] &&
@@ -116,7 +116,7 @@ static int S3C2440_nand_correct_data(struct mtd_info *mtd, u_char *dat,
 	    read_ecc[2] == calc_ecc[2])
 		return 0;
 
-	printf("S3C2440_nand_correct_data: not implemented\n");
+	printf("s3c2440_nand_correct_data: not implemented\n");
 	return -1;
 }
 #endif
@@ -126,7 +126,7 @@ int board_nand_init(struct nand_chip *nand)
 	u_int32_t cfg;
 	u_int8_t tacls, twrph0, twrph1;
 	struct s3c24x0_clock_power *clk_power = s3c24x0_get_base_clock_power();
-	struct S3C2440_nand *nand_reg = S3C2440_get_base_nand();
+	struct s3c2440_nand *nand_reg = s3c2440_get_base_nand();
 
 	debug("board_nand_init()\n");
 
@@ -162,14 +162,13 @@ int board_nand_init(struct nand_chip *nand)
 #endif
 
 	/* hwcontrol always must be implemented */
-	nand->cmd_ctrl = S3C2440_hwcontrol;
+	nand->cmd_ctrl = s3c2440_hwcontrol;
 
-	nand->dev_ready = S3C2440_dev_ready;
+	nand->dev_ready = s3c2440_dev_ready;
 
 #ifdef CONFIG_S3C2440_NAND_HWECC
-	nand->ecc.hwctl = S3C2440_nand_enable_hwecc;
-	nand->ecc.calculate = S3C2440_nand_calculate_ecc;
-	nand->ecc.correct = S3C2440_nand_correct_data;
+	nand->ecc.calculate = s3c2440_nand_calculate_ecc;
+	nand->ecc.correct = s3c2440_nand_correct_data;
 	nand->ecc.mode = NAND_ECC_HW;
 	nand->ecc.size = CONFIG_SYS_NAND_ECCSIZE;
 	nand->ecc.bytes = CONFIG_SYS_NAND_ECCBYTES;
