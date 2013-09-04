@@ -193,7 +193,8 @@
 #define CONFIG_SYS_NAND_U_BOOT_SIZE	 (512 << 10) 			/* Size of RAM U-Boot image */
 #endif
 
-
+#define CONFIG_MTD_DEBUG
+#define CONFIG_MTD_DEBUG_VERBOSE 3
 
 #define CONFIG_NAND_S3C2440
 #define CONFIG_S3C2440_NAND_HWECC
