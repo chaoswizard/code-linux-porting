@@ -132,9 +132,10 @@
 #define CONFIG_CMD_PORTIO
 #define CONFIG_CMD_REGINFO
 #define CONFIG_CMD_SAVES
-#define CONFIG_CMD_NAND
 #define CONFIG_CMD_NET
 #define CONFIG_CMD_PING
+#define CONFIG_CMD_NAND
+/* Dynamic MTD partition support */
 #define CONFIG_CMD_MTDPARTS
 
 /*
@@ -313,19 +314,20 @@
 #define CONFIG_RESET_TO_RETRY
 #define CONFIG_ZERO_BOOTDELAY_CHECK
 
-
+#ifdef CONFIG_CMD_MTDPARTS
+#define CONFIG_MTD_DEVICE		/* needed for mtdparts commands */
 /* configure for boot application */
 //wx: enable the nand defalut partition manage 
-#define MTDIDS_DEFAULT "nand0=wxmtd0"
+#define MTDIDS_DEFAULT "nand0=wxmtd"
 //wx: define the defalut nand partion configure,
 /** wx: !NOTE: 
 * MUST make sure the offset of root partition same as the target system(linux-kernel defined)
 */
-#define MTDPARTS_DEFAULT "mtdparts=wxmtd0:256k@0(uboot)," \
-								"128k(param)," \
-								"5m(kernel)," \
-								"-(rootfs)"
-
+#define MTDPARTS_DEFAULT "mtdparts=wxmtd:256k@0(uboot)," \
+	"128k(param)," \
+	"5m(kernel)," \
+	"-(rootfs)"
+#endif
 
 /*----------mtd config must refer as image layout table---------------*/
 #define CONFIG_BOOTARGS_YAFFS         	\
