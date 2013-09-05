@@ -31,8 +31,8 @@
 #undef DEBUG_LL
 # if defined(CONFIG_DEBUG_LL)
 # define DEBUG_LL(t,v)  	mov r0, t;mov r1, v;bl debug_ll
-# define DEBUG_LL_SP(t,v)  ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20));mov r0, t;mov r1, v;bl debug_ll
-# define DEBUG_LL_INIT()   ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20));bl debug_ll_init
+# define DEBUG_LL_SP(t,v)  ldr	sp, =CONFIG_SYS_TMP_SP_ADDR;mov r0, t;mov r1, v;bl debug_ll
+# define DEBUG_LL_INIT()   ldr	sp, =CONFIG_SYS_TMP_SP_ADDR;bl debug_ll_init
 # else
 # define DEBUG_LL(t,v) 
 # define DEBUG_LL_SP(t,v) 
@@ -211,9 +211,6 @@ copyex:
 	mcr p15, 0, r1, c1, c0, 0	
 
 
-	/*	
-	 * set mpll to 405Mhz, see C7P21  
-	 */  
 	ldr	r1, =CLK_CTL_BASE	
 	ldr	r2, =CONFIG_DEFAULT_MPLLCON	
 	str r2, [r1, #0x04] 	/* MPLLCON = CLK_BASE+4  */
@@ -238,7 +235,7 @@ copyex:
 	DEBUG_LL(#5, pc);
 #if defined(CONFIG_NAND_SPL)
     /*wx:temp stack for call c function, nand_boot*/
-	ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20)) @wx: this address must in dram valid area
+	ldr	sp, =CONFIG_SYS_TMP_SP_ADDR @wx: this address must in dram valid area
 	DEBUG_LL(#3, pc);
 	@ load U-Boot to RAM
 	ldr r0, _nand_boot_ofs

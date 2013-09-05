@@ -91,6 +91,9 @@
 #define CONFIG_SYS_CLK_FREQ	12000000
 #define CONFIG_RTC_S3C24X0
 /* MDIV | PSDIV, 405M*/
+/*  
+ * set mpll to 405Mhz, see C7P21  
+ */  
 #define CONFIG_DEFAULT_MPLLCON  ((0x7f << 12) | 0x21)
 #define CONFIG_DEFAULT_CLKDIV   (5)
 
@@ -182,20 +185,13 @@
 #define CONFIG_SYS_SDRAM_BASE       0x30000000 /*(nGCS6)=0x30000000 */
 
 /*
-
- *  
  * the GENERATED_GBL_DATA_SIZA(global_data) is create by kbulid tools as in asm-offsets.c
  * --------------------------------------- high address
- * |      |
- * |      |
  * |stack |   
- * |      |         
  * |------|------------------------------- <stack base addr>=INIT_SP_ADDR
  * |      | +sizeof(struct global_data)
- * |      |------------------------------- <gd base addr> = r8
- * |  4K  |  
+ * |  4K  |------------------------------- <gd base addr> = r8
  * |      |  unused
- * |      |  
  * --------------------------------------- low address 
  */
 #define CONFIG_PRIVATE_SIZE  (16<<10)
@@ -217,18 +213,18 @@
 #define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_BOOT_PARAM_ADDR + CONFIG_MIN_PAD_SIZE +\
                                     GENERATED_GBL_DATA_SIZE)
 
-                                    
-#define CONFIG_SYS_LOAD_ADDR	(CONFIG_SYS_TEXT_BASE - CONFIG_MAX_LOAD_SIZE)/* default load address*/
+/* default load address = (CONFIG_SYS_TEXT_BASE - (40<<20))*/                      
+#define CONFIG_SYS_LOAD_ADDR	0x30800000
 
 
 
 #elif (CONFIG_SYS_TEXT_BASE == CONFIG_SYS_SDRAM_BASE)
 /*         0x30000000->0x34000000 (0M:64M)
- *---------------------------------------------------------------------------|
- *   8M              |        16K          |  64K   |             |
- *---------------------------------------------------------------------------|
- * code +  tmp stack |pad1 |boot param |gd |stack   |load addr
- *----------------------------------------------------------------------------
+ *----------------------------------------------------------------|
+ *   8M              |        16K          |  64K   |   40M       |
+ *----------------------------------------------------------------|
+ * code +  tmp stack |pad1 |boot param |gd |stack   |load addr|   |
+ *----------------------------------------------------------------|
  */
 
 #define CONFIG_BOOT_PARAM_ADDR	(CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE +\
@@ -236,12 +232,9 @@
                                         
 #define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_BOOT_PARAM_ADDR + CONFIG_PRIVATE_SIZE -\
                                     GENERATED_GBL_DATA_SIZE)
-
-
-#define CONFIG_SYS_LOAD_ADDR	(CONFIG_SYS_SDRAM_BASE + PHYS_SDRAM_SIZE -\
-                                    CONFIG_MAX_LOAD_SIZE)/* default load address*/
+/* default load address = (0x34000000 - (40<<20))*/                      
+#define CONFIG_SYS_LOAD_ADDR	0x31800000
   
-
 #else
 #error Elvon:unsupport ram layout. 
 #endif
