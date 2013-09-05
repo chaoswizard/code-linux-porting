@@ -39,6 +39,7 @@ CFLAGS	+= -DCONFIG_NAND_SPL
 
 SOBJS	= start.o lowlevel_init.o
 COBJS	= nand_boot.o s3c2440_nand.o
+COBJS   += lowlevel_debug.o
 
 SRCS	:= $(addprefix $(obj),$(SOBJS:.o=.S) $(COBJS:.o=.c))
 OBJS	:= $(addprefix $(obj),$(SOBJS) $(COBJS))
@@ -78,6 +79,10 @@ $(obj)start.S:
 $(obj)lowlevel_init.S:
 	@rm -f $@
 	@ln -s $(TOPDIR)/arch/arm/cpu/arm920t/s3c24x0/lowlevel_init.S $@
+
+$(obj)lowlevel_debug.c:
+	@rm -f $@
+	@ln -s $(TOPDIR)/arch/arm/cpu/arm920t/s3c24x0/lowlevel_debug.c $@
 
 # from nand_spl directory
 $(obj)nand_boot.c:

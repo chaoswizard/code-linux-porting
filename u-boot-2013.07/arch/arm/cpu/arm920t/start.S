@@ -30,9 +30,13 @@
 
 #undef DEBUG_LL
 # if defined(CONFIG_DEBUG_LL)
-# define DEBUG_LL(t)  	mov r0, t;bl debug_ll
+# define DEBUG_LL(t,v)  	mov r0, t;mov r1, v;bl debug_ll
+# define DEBUG_LL_SP(t,v)  ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20));mov r0, t;mov r1, v;bl debug_ll
+# define DEBUG_LL_INIT()   ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20));bl debug_ll_init
 # else
-# define DEBUG_LL(t)  	
+# define DEBUG_LL(t,v) 
+# define DEBUG_LL_SP(t,v) 
+# define DEBUG_LL_INIT()  	
 # endif
 /*
  *************************************************************************
@@ -188,9 +192,6 @@ copyex:
 # if defined(CONFIG_S3C2440)
 
 #define CLK_CTL_BASE   	(0x4C000000)	
-#define MDIV_405	    (0x7f << 12	)
-#define PSDIV_405  	    (0x21)
-
 	/*	
 	 * FCLK:HCLK:PCLK = 1:4:8  
 	 * because we will set fclk, hclk, pclk, work in different speed,  
@@ -198,7 +199,7 @@ copyex:
 	 * please see Chapter 7 Page 9	
 	 */  
 	ldr r0, =CLKDIVN
-	mov r1, #5
+	ldr r1, =CONFIG_DEFAULT_CLKDIV
 	str r1, [r0]
 
 	/*	
@@ -213,9 +214,8 @@ copyex:
 	/*	
 	 * set mpll to 405Mhz, see C7P21  
 	 */  
-	mov	r1, #CLK_CTL_BASE	
-	mov	r2, #MDIV_405	
-	add	r2, r2, #PSDIV_405	
+	ldr	r1, =CLK_CTL_BASE	
+	ldr	r2, =CONFIG_DEFAULT_MPLLCON	
 	str r2, [r1, #0x04] 	/* MPLLCON = CLK_BASE+4  */
 
 # else
@@ -234,20 +234,21 @@ copyex:
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	bl	cpu_init_crit
 #endif
-	DEBUG_LL(#1);
+	DEBUG_LL_INIT();
+	DEBUG_LL(#5, pc);
 #if defined(CONFIG_NAND_SPL)
     /*wx:temp stack for call c function, nand_boot*/
 	ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20)) @wx: this address must in dram valid area
-	bic sp, sp, #7 /* 8-byte alignment for ABI compliance */
-	DEBUG_LL(#3);
+	DEBUG_LL(#3, pc);
 	@ load U-Boot to RAM
 	ldr r0, _nand_boot_ofs
-	mov	 pc, r0
+	mov pc, r0
 
 _nand_boot_ofs:
 	.word nand_boot
 # else
-	DEBUG_LL(#2);
+	DEBUG_LL_SP(#2, pc);	
+	DEBUG_LL_SP(#4, pc);
 	@ldr r0, =CONFIG_SYS_TEXT_BASE
 	@bl relocate_code
 	bl	_main
@@ -258,82 +259,6 @@ _nand_boot_ofs:
 c_runtime_cpu_setup:
 
 	mov	pc, lr
-
-# if defined(CONFIG_DEBUG_LL)
-/*
- * usage: debug_ll(count)
- * param count: flash times
- */
-	.globl debug_ll
-debug_ll:
-	mov	ip, lr
-# define GPIO_CTL_BASE 0x56000000
-# define oGPIO_B 0x10
-
-# define oGPIO_CON 0x0
-# define oGPIO_DAT 0x4
-# define oGPIO_UP 0x8
-/*
- * a,b,c,d: led1-led4 ==> GPIO_B[8:5]
- * s:speaker          ==> GPIO_B[0]
- */
-#define LED_SPK_VAL(a,b,c,d,s) (((a)<<8) | ((b)<<7) | ((c)<<6) | ((d)<<5) | ((s)<<0))
-/*LED for debug*/
-# if defined(CONFIG_MINI2440_LED) || defined(CONFIG_MINI2440_SPEAKER)
-	mov	r1, #GPIO_CTL_BASE
-	@ [10:17]=01010101,set as gpio
-	add	r1, r1, #oGPIO_B
-	ldr	r2, =0x295551
-	str	r2, [r1, #oGPIO_CON]
-	@ [5:8]=1110 (1:disable pullup)
-	ldr	r2, =0x1ff
-	str	r2, [r1, #oGPIO_UP]
-	
-led_spk_loop:
-	mov	r2, #0
-# if defined(CONFIG_MINI2440_LED)
-	add	r2, r2,#LED_SPK_VAL(1, 1, 1, 1, 0)
-# endif
-# if defined(CONFIG_MINI2440_SPEAKER)
-	add	r2, r2,#LED_SPK_VAL(0, 0, 0, 0, 1)
-# endif
-	str	r2, [r1, #oGPIO_DAT]
-	@delay 
-	mov r3, #(2<<10)
-	bl debug_delay_ll
-@ close led and speaker
-	mov	r2, #0
-@ open one led
-# if defined(CONFIG_MINI2440_LED)
-	add	r2, r2,#LED_SPK_VAL(0, 1, 0, 0, 0)
-# endif
-	str	r2, [r1, #oGPIO_DAT]
-	mov r3, #(1<<10)
-	bl debug_delay_ll
-	sub r0, r0, #1
-	cmp r0, #0
-	bne led_spk_loop
-	mov r3, #(4<<10)
-	bl debug_delay_ll
-# endif
-	mov	lr, ip
-	mov	pc, lr
-
-	@delay ms
-debug_delay_ll:
-0:
-	mov r2, #(8<<10)
-1:
-	sub r2, r2, #1
-	cmp r2, #0
-	nop
-	bne 1b
-	sub r3, r3, #1
-	cmp r3, #0
-   bne 0b
-	mov	pc, lr
-# endif
-
 /*
  *************************************************************************
  *
@@ -344,8 +269,6 @@ debug_delay_ll:
  *
  *************************************************************************
  */
-
-
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 cpu_init_crit:
 	/*

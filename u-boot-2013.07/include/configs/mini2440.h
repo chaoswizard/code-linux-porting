@@ -52,9 +52,9 @@
 //#define CONFIG_MTD_DEBUG_VERBOSE 3
 
 #ifdef CONFIG_DEBUG_LL
-#define DEBUG_LL(x)   debug_ll(x)
+#define DEBUG_LL(x, y)   debug_ll((unsigned int)(x), (unsigned int)(y))
 #else
-#define DEBUG_LL(x)
+#define DEBUG_LL(x, y)
 #endif
 
 /*
@@ -91,6 +91,11 @@
 /* MINI2440 has 12.0000MHz input clock */
 #define CONFIG_SYS_CLK_FREQ	12000000
 #define CONFIG_RTC_S3C24X0
+/* MDIV | PSDIV, 405M*/
+#define CONFIG_DEFAULT_MPLLCON  ((0x7f << 12) | 0x21)
+#define CONFIG_DEFAULT_CLKDIV   (5)
+
+
 
 
 /*
@@ -114,6 +119,8 @@
  */
 #define CONFIG_S3C24X0_SERIAL
 #define CONFIG_SERIAL1		1	/* we use SERIAL 1 on mini2440 */
+#define CONFIG_DEBUG_LL_SERIAL 1
+
 
 
 /*

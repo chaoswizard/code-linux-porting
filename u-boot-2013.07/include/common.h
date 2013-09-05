@@ -652,6 +652,11 @@ void	serial_puts   (const char *);
 int	serial_getc   (void);
 int	serial_tstc   (void);
 
+#ifdef CONFIG_DEBUG_LL
+void debug_ll(unsigned int num1, unsigned int num2);
+void debug_ll_init(void);
+
+#endif
 void	_serial_setbrg (const int);
 void	_serial_putc   (const char, const int);
 void	_serial_putc_raw(const char, const int);

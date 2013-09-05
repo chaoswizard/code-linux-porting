@@ -287,6 +287,8 @@ void board_init_f(ulong bootflag)
 	void *new_fdt = NULL;
 	size_t fdt_size = 0;
 
+    DEBUG_LL(1, gd);
+
 	memset((void *)gd, 0, sizeof(gd_t));
 
 	gd->mon_len = _bss_end_ofs;
@@ -300,6 +302,7 @@ void board_init_f(ulong bootflag)
 	/* Allow the early environment to override the fdt address */
 	gd->fdt_blob = (void *)getenv_ulong("fdtcontroladdr", 16,
 						(uintptr_t)gd->fdt_blob);
+    DEBUG_LL(3, gd);
 
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
 		if ((*init_fnc_ptr)() != 0) {

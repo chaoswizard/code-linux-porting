@@ -29,10 +29,12 @@ COBJS-$(CONFIG_USE_IRQ) += interrupts.o
 COBJS-$(CONFIG_DISPLAY_CPUINFO)	+= cpu_info.o
 COBJS-y	+= speed.o
 COBJS-y	+= timer.o
+COBJS-$(CONFIG_DEBUG_LL) += lowlevel_debug.o
+
+SOBJS	:= lowlevel_init.o
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS-y:.o=.c)
 OBJS	:= $(addprefix $(obj),$(SOBJS) $(COBJS-y))
-SOBJS	:= lowlevel_init.o
 
 all:	$(obj).depend $(LIB)
 
