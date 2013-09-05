@@ -35,7 +35,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-/*wx: 0x33000000->0x34000000 (48M:16M)*/
 #if 1
 #define CONFIG_USE_NAND
 #define CONFIG_SYS_NO_FLASH
@@ -119,7 +118,6 @@
  */
 #define CONFIG_S3C24X0_SERIAL
 #define CONFIG_SERIAL1		1	/* we use SERIAL 1 on mini2440 */
-#define CONFIG_DEBUG_LL_SERIAL 1
 
 
 
@@ -181,25 +179,75 @@
  */
 #define CONFIG_NR_DRAM_BANKS        1          /* we have 1 bank of DRAM */
 #define PHYS_SDRAM_SIZE             (64 << 20) /* 64MB of DRAM */
-#define CONFIG_SYS_SDRAM_BASE       0x30000000
+#define CONFIG_SYS_SDRAM_BASE       0x30000000 /*(nGCS6)=0x30000000 */
 
 /*
- * Stack should be on the SRAM because
- * DRAM is not init
- *  wx:comment: start.s jump to c function use bleow stack address(must init before call c function)
+
+ *  
  * the GENERATED_GBL_DATA_SIZA(global_data) is create by kbulid tools as in asm-offsets.c
- * ---------------------------------
- * |   (4K)=0x30001000
- * |       +sizeof(struct global_data) = gd
- * |       =INIT_SP_ADDR | // up is stack, down is system global data
- * |       +SP_SIZE ?(dymatic size, decide by gd size)     
- * |--------------------------------
- * |      boot code
- * |------- (nGCS6)=0x30000000  
- * --------------------------------- 
+ * --------------------------------------- high address
+ * |      |
+ * |      |
+ * |stack |   
+ * |      |         
+ * |------|------------------------------- <stack base addr>=INIT_SP_ADDR
+ * |      | +sizeof(struct global_data)
+ * |      |------------------------------- <gd base addr> = r8
+ * |  4K  |  
+ * |      |  unused
+ * |      |  
+ * --------------------------------------- low address 
  */
-#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_SDRAM_BASE + 0x1000 - \
-				GENERATED_GBL_DATA_SIZE)
+#define CONFIG_PRIVATE_SIZE  (16<<10)
+#define CONFIG_MIN_PAD_SIZE (8<<10)
+#define CONFIG_MAX_STACK_SIZE (64<<10)
+#define CONFIG_MAX_LOAD_SIZE (40<<20)
+#define CONFIG_MAX_CODE_SIZE (8<<20 + CONFIG_MIN_PAD_SIZE)
+
+#if (CONFIG_SYS_TEXT_BASE == 0x33000000)
+/*         0x33000000->0x34000000 (48M:16M)
+ *------------ 48M -------|-----------------   16M  -------------------------|
+ *------------------------|----- 8M----------|-------------------------------|
+ *---------------------------------------------------------------------------|
+ * unused |load addr|pad2 |code +  tmp stack |pad1 |boot param |gd |stack    |
+ *----------------------------------------------------------------------------
+ */
+#define CONFIG_BOOT_PARAM_ADDR	(CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE)/* boot parameters address */
+                                        
+#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_BOOT_PARAM_ADDR + CONFIG_MIN_PAD_SIZE +\
+                                    GENERATED_GBL_DATA_SIZE)
+
+                                    
+#define CONFIG_SYS_LOAD_ADDR	(CONFIG_SYS_TEXT_BASE - CONFIG_MAX_LOAD_SIZE)/* default load address*/
+
+
+
+#elif (CONFIG_SYS_TEXT_BASE == CONFIG_SYS_SDRAM_BASE)
+/*         0x30000000->0x34000000 (0M:64M)
+ *---------------------------------------------------------------------------|
+ *   8M              |        16K          |  64K   |             |
+ *---------------------------------------------------------------------------|
+ * code +  tmp stack |pad1 |boot param |gd |stack   |load addr
+ *----------------------------------------------------------------------------
+ */
+
+#define CONFIG_BOOT_PARAM_ADDR	(CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE +\
+                                    CONFIG_MIN_PAD_SIZE)/* boot parameters address */
+                                        
+#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_BOOT_PARAM_ADDR + CONFIG_PRIVATE_SIZE -\
+                                    GENERATED_GBL_DATA_SIZE)
+
+
+#define CONFIG_SYS_LOAD_ADDR	(CONFIG_SYS_SDRAM_BASE + PHYS_SDRAM_SIZE -\
+                                    CONFIG_MAX_LOAD_SIZE)/* default load address*/
+  
+
+#else
+#error Elvon:unsupport ram layout. 
+#endif
+
+#define CONFIG_SYS_TMP_SP_ADDR  (CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE - \
+                                    CONFIG_MIN_PAD_SIZE)
 
 /*-----------------------------------------------------------------------
  * Nand FLASH organization
@@ -309,11 +357,6 @@
 #define CONFIG_SYS_HUSH_PARSER
 #define CONFIG_SYS_LONGHELP
 
-/* default load address*/
-#define CONFIG_SYS_LOAD_ADDR	 0x31000000	
-
-/* boot parameters address */
-#define CONFIG_BOOT_PARAM_ADDR	0x30000100
 
 /* autoboot */
 #define CONFIG_BOOTDELAY	9
