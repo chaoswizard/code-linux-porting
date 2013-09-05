@@ -372,33 +372,32 @@
  */
 /*----------------------------------------------------------------------------*/
 #define CONFIG_EXTRA_ENV_SETTINGS					\
-	"u-boot-ofs="  __stringify(IMG_UBOOT_OFFSET) "\0"	\
-	"u-boot_size=" __stringify(IMG_UBOOT_SIZE) "\0"	\
-	"kernel_ofs="  __stringify(IMG_KERNEL_OFFSET) "\0"	\
-	"kernel_size=" __stringify(IMG_KERNEL_SIZE) "\0"	\
-	"rootfs_ofs="  __stringify(IMG_ROOTFS_OFFSET) "\0"	\
+	"name-uboot=u-boot-nand.bin\0"	\
+	"name-kernel=uimage.bin\0"	\
+	"name-rootfs=rootfs.bin\0"	\
+	"ofs-uboot="  __stringify(IMG_UBOOT_OFFSET) "\0"	\
+	"ofs-kernel="  __stringify(IMG_KERNEL_OFFSET) "\0"	\
+	"ofs-rootfs="  __stringify(IMG_ROOTFS_OFFSET) "\0"	\
+	"size-kernel=" __stringify(IMG_KERNEL_SIZE) "\0"	\
+	"size-uboot=" __stringify(IMG_UBOOT_SIZE) "\0"	\
 	"loadaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
 	"fileaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
-	"rootfs_ofs="  __stringify(IMG_ROOTFS_OFFSET) "\0"	\
-	"u-boot=u-boot.bin\0"	\
-	"kernel=uimage.bin\0"	\
-	"rootfs=rootfs.bin\0"	\
-        "boot-kernel-nand=nand read ${loadaddr} ${kernel_ofs} ${kernel_size};"\
+        "boot-kernel-nand=nand read ${loadaddr} ${ofs-kernel} ${size-kernel};"\
        		"bootm ${loadaddr}\0"\
-	"boot-kernel-tftp=tftp ${loadaddr} ${kernel}; "	\
+	"boot-kernel-tftp=tftp ${loadaddr} ${name-kernel}; "	\
 	 	"bootm ${loadaddr}\0"	\
-	"tftp2nand-uboot=tftp ${loadaddr} ${u-boot};"	\
-        	"nand erase ${u-boot-ofs} ${filesize};"	\
-        	"nand write ${fileaddr} ${u-boot-ofs} ${filesize}\0"	\
-	"tftp2nand-kernel=tftp ${loadaddr} ${kernel};"	\
-        	"nand erase ${kernel_ofs} ${filesize};"	\
-        	"nand write ${fileaddr} ${kernel_ofs} ${filesize}\0"	\
-	"tftp2nand-rootfs=tftp ${loadaddr} ${rootfs};"	\
-        	"nand erase ${rootfs_ofs} ${filesize};"	\
-        	"nand write.yaffs ${fileaddr} ${rootfs_ofs} ${filesize}\0"	\
+	"tftp2nand-uboot=tftp ${loadaddr} ${name-uboot};"	\
+        	"nand erase ${ofs-uboot} ${filesize};"	\
+        	"nand write ${fileaddr} ${ofs-uboot} ${filesize}\0"	\
+	"tftp2nand-kernel=tftp ${loadaddr} ${name-kernel};"	\
+        	"nand erase ${ofs-kernel} ${filesize};"	\
+        	"nand write ${fileaddr} ${ofs-kernel} ${filesize}\0"	\
+	"tftp2nand-rootfs=tftp ${loadaddr} ${name-rootfs};"	\
+        	"nand erase ${ofs-rootfs} ${filesize};"	\
+        	"nand write.yaffs ${fileaddr} ${ofs-rootfs} ${filesize}\0"	\
 	"uart2nand-uboot=loadb ${loadaddr};"	\
-        	"nand erase ${u-boot-ofs} ${filesize};"	\
-        	"nand write ${fileaddr} ${u-boot-ofs} ${filesize}\0"	\
+        	"nand erase ${ofs-uboot} ${filesize};"	\
+        	"nand write ${fileaddr} ${ofs-uboot} ${filesize}\0"	\
 	"nand-erase-env=nand erase " __stringify(IMG_PARAM_OFFSET)" " __stringify(IMG_PARAM_SIZE) "\0"\
 	"set-args-yaffs=setenv bootargs "  CONFIG_BOOTARGS_YAFFS "\0"\
 	"set-args-ramdisk=setenv bootargs " CONFIG_BOOTARGS_RAMDISK "\0"\
