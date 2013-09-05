@@ -234,11 +234,12 @@ copyex:
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	bl	cpu_init_crit
 #endif
-	DEBUG_LL(#3);
+	DEBUG_LL(#1);
 #if defined(CONFIG_NAND_SPL)
     /*wx:temp stack for call c function, nand_boot*/
 	ldr	sp, =(CONFIG_SYS_TEXT_BASE + (2<<20)) @wx: this address must in dram valid area
 	bic sp, sp, #7 /* 8-byte alignment for ABI compliance */
+	DEBUG_LL(#3);
 	@ load U-Boot to RAM
 	ldr r0, _nand_boot_ofs
 	mov	 pc, r0
@@ -246,6 +247,7 @@ copyex:
 _nand_boot_ofs:
 	.word nand_boot
 # else
+	DEBUG_LL(#2);
 	@ldr r0, =CONFIG_SYS_TEXT_BASE
 	@bl relocate_code
 	bl	_main

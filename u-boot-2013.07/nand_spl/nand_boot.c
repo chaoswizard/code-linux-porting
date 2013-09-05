@@ -258,7 +258,7 @@ void nand_boot(void)
 	nand_info_t nand_info;
 	__attribute__((noreturn)) void (*uboot)(void);
 
-	DEBUG_LL(2);
+	DEBUG_LL(5);
 	/*
 	 * Init board specific nand support
 	 */
@@ -272,13 +272,14 @@ void nand_boot(void)
 	if (nand_chip.select_chip)
 		nand_chip.select_chip(&nand_info, 0);
 
-	DEBUG_LL(5);
+	DEBUG_LL(7);
 	/*
 	 * Load U-Boot image from NAND into RAM
 	 */
 	nand_load(&nand_info, CONFIG_SYS_NAND_U_BOOT_OFFS, CONFIG_SYS_NAND_U_BOOT_SIZE,
 		  (uchar *)CONFIG_SYS_NAND_U_BOOT_DST);
 
+	DEBUG_LL(9);
 #ifdef CONFIG_NAND_ENV_DST
 	nand_load(&nand_info, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE,
 		  (uchar *)CONFIG_NAND_ENV_DST);

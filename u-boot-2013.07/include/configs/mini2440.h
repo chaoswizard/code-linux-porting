@@ -45,9 +45,9 @@
 #define CONFIG_ENV_IS_IN_FLASH
 #endif
 
-//#define CONFIG_DEBUG_LL
-//#define CONFIG_MINI2440_LED
-//#define CONFIG_MINI2440_SPEAKER
+#define CONFIG_DEBUG_LL
+#define CONFIG_MINI2440_LED
+#define CONFIG_MINI2440_SPEAKER
 //#define CONFIG_MTD_DEBUG
 //#define CONFIG_MTD_DEBUG_VERBOSE 3
 
@@ -135,11 +135,13 @@
 #define CONFIG_CMD_NAND
 #define CONFIG_CMD_NET
 #define CONFIG_CMD_PING
+#define CONFIG_CMD_MTDPARTS
+
 /*
  * Miscellaneous configurable options
  */
 #define CONFIG_LONGHELP
-#define CONFIG_SYS_PROMPT	"ELVON_NLDR => "
+#define CONFIG_SYS_PROMPT	"ELVON_NLDR#"
 #define CONFIG_SYS_CBSIZE	256
 #define CONFIG_SYS_PBSIZE	(CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16)
 #define CONFIG_SYS_MAXARGS	32
@@ -164,7 +166,7 @@
  * Size of malloc() pool
  * BZIP2 / LZO / LZMA need a lot of RAM
  */
-#define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + 2048*1024)
+#define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + (2<<20))
 
 /*
  * Physical Memory Map
@@ -195,14 +197,6 @@
  * Nand FLASH organization
  */
 #if defined(CONFIG_USE_NAND) || defined(CONFIG_NAND_SPL) || defined(CONFIG_CMD_NAND)
-
-#if defined(CONFIG_NAND_SPL)
-#define CONFIG_SYS_NAND_U_BOOT_DST	CONFIG_SYS_TEXT_BASE		/* NUB load-addr */
-#define CONFIG_SYS_NAND_U_BOOT_START	CONFIG_SYS_NAND_U_BOOT_DST	/* NUB start-addr */
-#define CONFIG_SYS_NAND_U_BOOT_OFFS	 (4 << 10)      		/* Offset to RAM U-Boot image */
-#define CONFIG_SYS_NAND_U_BOOT_SIZE	 (512 << 10) 			/* Size of RAM U-Boot image */
-#endif
-
 
 #define CONFIG_NAND_S3C2440
 #define CONFIG_S3C2440_NAND_HWECC
@@ -249,21 +243,30 @@
 /* ====================================================
  * wx:image layout table, same as kernel config
  */
-/*mtdblock0 [0M-1M]/[0M-4M]*/
+/*mtdblock0 [256K]*/
 #define  IMG_UBOOT_OFFSET     0
-#define  IMG_UBOOT_SIZE       0x100000
+#define  IMG_UBOOT_SIZE       0x00040000
 
-/*between uboot and kernel*/
-#define  IMG_PARAM_OFFSET     0x200000
-#define  IMG_PARAM_SIZE       0x20000
+/*mtdblock1 [128K]*/
+#define  IMG_PARAM_OFFSET     0x00040000
+#define  IMG_PARAM_SIZE       0x00020000
 
-/*mtdblock1 [4M-7M]/[4M-8M]*/
-#define  IMG_KERNEL_OFFSET    0x400000
-#define  IMG_KERNEL_SIZE      0x400000
+/*mtdblock2 [5M]/[4M-8M]*/
+#define  IMG_KERNEL_OFFSET    0x00060000
+#define  IMG_KERNEL_SIZE      0x00500000
 
-/*mtdblock2 [8M-$]*/
-#define  IMG_ROOTFS_OFFSET    0x800000
+/*mtdblock3 [-$]*/
+#define  IMG_ROOTFS_OFFSET    0x00560000
 /* ====================================================*/
+
+#if defined(CONFIG_NAND_SPL)
+#define CONFIG_SYS_NAND_U_BOOT_DST	CONFIG_SYS_TEXT_BASE		/* uboot.bin load addr */
+#define CONFIG_SYS_NAND_U_BOOT_START CONFIG_SYS_TEXT_BASE	/* uboot.bin run-addr */
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	 (4 << 10)      		/* uboot.bin Offset on nand */
+#define CONFIG_SYS_NAND_U_BOOT_SIZE	 IMG_UBOOT_SIZE		/* uboot.bin size on nand */
+/* Put environment copies after the end of U-Boot owned RAM */
+//#define CONFIG_NAND_ENV_DST	            (CONFIG_SYS_TEXT_BASE + IMG_PARAM_OFFSET)
+#endif
 
 
 #if defined(CONFIG_ENV_IS_IN_FLASH)
@@ -274,13 +277,9 @@
 
 #elif defined(CONFIG_ENV_IS_IN_NAND)
 /* save on nand flash*/
-
 /* 128K, wx: MUST mutiply with Block Size(128K), orelse env will write failed*/
-#define CONFIG_ENV_SIZE	(IMG_PARAM_SIZE) // 
-#define CONFIG_ENV_OFFSET   (IMG_PARAM_OFFSET)
-
-/* Put environment copies after the end of U-Boot owned RAM */
-#define CONFIG_NAND_ENV_DST	(0x33000000 + IMG_UBOOT_SIZE )
+#define CONFIG_ENV_SIZE	 IMG_PARAM_SIZE 
+#define CONFIG_ENV_OFFSET   IMG_PARAM_OFFSET 
 #else
 #error environments configure error.
 #endif
@@ -299,13 +298,14 @@
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_CMDLINE_EDITING
 #define CONFIG_AUTO_COMPLETE
+#define CONFIG_SYS_HUSH_PARSER
+#define CONFIG_SYS_LONGHELP
 
-
-/* default load address by tftp, uart, usb*/
-#define CONFIG_SYS_LOAD_ADDR		0x30008000
+/* default load address*/
+#define CONFIG_SYS_LOAD_ADDR	 0x31000000	
 
 /* boot parameters address */
-#define CONFIG_BOOT_PARAM_ADDR		0x30000100
+#define CONFIG_BOOT_PARAM_ADDR	0x30000100
 
 /* autoboot */
 #define CONFIG_BOOTDELAY	9
@@ -313,28 +313,30 @@
 #define CONFIG_RESET_TO_RETRY
 #define CONFIG_ZERO_BOOTDELAY_CHECK
 
+
 /* configure for boot application */
 //wx: enable the nand defalut partition manage 
-#define MTDIDS_DEFAULT "nand0=nandflash0"
+#define MTDIDS_DEFAULT "nand0=wxmtd0"
 //wx: define the defalut nand partion configure,
 /** wx: !NOTE: 
 * MUST make sure the offset of root partition same as the target system(linux-kernel defined)
-* Here Skip (params) partition, and need not care about the offset because it be
-* included in bootloader partition.
 */
-#define MTDPARTS_DEFAULT "mtdparts=nandflash0:4M@0(uboot+params)," \
-                         "4M(kernel_uImage)," \
-                         "-(rootfs)"
+#define MTDPARTS_DEFAULT "mtdparts=wxmtd0:256k@0(uboot)," \
+								"128k(param)," \
+								"5m(kernel)," \
+								"-(rootfs)"
+
+
 /*----------mtd config must refer as image layout table---------------*/
 #define CONFIG_BOOTARGS_YAFFS         	\
-	"root=/dev/mtdblock2 rw "\
+	"root=/dev/mtdblock3 rw "\
 	"rootfstype=yaffs "\
 	"noinitrd "\
 	"console=ttySAC0,115200 "\
 	"init=/linuxrc"
 /*----------------------------------------------------------------------------*/
 #define CONFIG_BOOTARGS_CRAMFS         	\
-	"root=/dev/mtdblock2 rw "\
+	"root=/dev/mtdblock3 rw "\
 	"rootfstype=cramfs "\
 	"console=ttySAC0,115200 "\
 	"noinitrd "\
@@ -375,11 +377,14 @@
 	"kernel_ofs="  __stringify(IMG_KERNEL_OFFSET) "\0"	\
 	"kernel_size=" __stringify(IMG_KERNEL_SIZE) "\0"	\
 	"rootfs_ofs="  __stringify(IMG_ROOTFS_OFFSET) "\0"	\
+	"loadaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
+	"fileaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
+	"rootfs_ofs="  __stringify(IMG_ROOTFS_OFFSET) "\0"	\
 	"u-boot=u-boot.bin\0"	\
 	"kernel=uimage.bin\0"	\
 	"rootfs=rootfs.bin\0"	\
-       "boot-kernel-nand=nand read ${loadaddr} ${kernel_ofs} ${kernel_size};"\
-       	"bootm ${loadaddr}\0"\
+        "boot-kernel-nand=nand read ${loadaddr} ${kernel_ofs} ${kernel_size};"\
+       		"bootm ${loadaddr}\0"\
 	"boot-kernel-tftp=tftp ${loadaddr} ${kernel}; "	\
 	 	"bootm ${loadaddr}\0"	\
 	"tftp2nand-uboot=tftp ${loadaddr} ${u-boot};"	\
@@ -391,6 +396,9 @@
 	"tftp2nand-rootfs=tftp ${loadaddr} ${rootfs};"	\
         	"nand erase ${rootfs_ofs} ${filesize};"	\
         	"nand write.yaffs ${fileaddr} ${rootfs_ofs} ${filesize}\0"	\
+	"uart2nand-uboot=loadb ${loadaddr};"	\
+        	"nand erase ${u-boot-ofs} ${filesize};"	\
+        	"nand write ${fileaddr} ${u-boot-ofs} ${filesize}\0"	\
 	"nand-erase-env=nand erase " __stringify(IMG_PARAM_OFFSET)" " __stringify(IMG_PARAM_SIZE) "\0"\
 	"set-args-yaffs=setenv bootargs "  CONFIG_BOOTARGS_YAFFS "\0"\
 	"set-args-ramdisk=setenv bootargs " CONFIG_BOOTARGS_RAMDISK "\0"\
@@ -401,11 +409,5 @@
 /*---------------- boot default -------------------------------------*/
 #define CONFIG_BOOTARGS	CONFIG_BOOTARGS_YAFFS
 #define CONFIG_BOOTCOMMAND	"run boot-kernel-nand"
-
-
-
-
-
-
 
 #endif	/* __CONFIG_H */
