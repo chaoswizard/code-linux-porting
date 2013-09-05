@@ -406,17 +406,17 @@ int do_bdinfo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 #endif
 
     print_num ("text entry",    CONFIG_SYS_TEXT_BASE);
+#if defined(CONFIG_SYS_TMP_SP_ADDR)
+    print_num ("temp stack",    CONFIG_SYS_TMP_SP_ADDR);
+#endif
 #if defined(CONFIG_BOOT_PARAM_ADDR)
     print_num ("boot param",    CONFIG_BOOT_PARAM_ADDR);
-#endif
-#if defined(CONFIG_SYS_LOAD_ADDR)
-    print_num ("load addr",    CONFIG_SYS_LOAD_ADDR);
 #endif
 #if defined(CONFIG_SYS_INIT_SP_ADDR)
     print_num ("init stack",    CONFIG_SYS_INIT_SP_ADDR);
 #endif
-#if defined(CONFIG_SYS_TMP_SP_ADDR)
-    print_num ("temp stack",    CONFIG_SYS_TMP_SP_ADDR);
+#if defined(CONFIG_SYS_LOAD_ADDR)
+    print_num ("load addr",    CONFIG_SYS_LOAD_ADDR);
 #endif
 
 	return 0;
