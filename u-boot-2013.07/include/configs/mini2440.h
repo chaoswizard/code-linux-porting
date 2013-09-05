@@ -194,11 +194,11 @@
  * |      |  unused
  * --------------------------------------- low address 
  */
-#define CONFIG_PRIVATE_SIZE  (16<<10)
-#define CONFIG_MIN_PAD_SIZE (8<<10)
-#define CONFIG_MAX_STACK_SIZE (64<<10)
 #define CONFIG_MAX_LOAD_SIZE (40<<20)
-#define CONFIG_MAX_CODE_SIZE ((8<<20) + CONFIG_MIN_PAD_SIZE)
+#define CONFIG_MAX_CODE_SIZE (8<<20)
+#define CONFIG_PRIVATE_SIZE  (16<<10)
+#define CONFIG_TMP_STACK_SIZE (64<<10)
+#define CONFIG_BOOT_PARAM_SIZE (2<<10)
 
 #if (CONFIG_SYS_TEXT_BASE == 0x33000000)
 /*         0x33000000->0x34000000 (48M:16M)
@@ -208,15 +208,9 @@
  * unused |load addr|pad2 |code +  tmp stack |pad1 |boot param |gd |stack    |
  *----------------------------------------------------------------------------
  */
-#define CONFIG_BOOT_PARAM_ADDR	(CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE)/* boot parameters address */
-                                        
-#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_BOOT_PARAM_ADDR + CONFIG_MIN_PAD_SIZE +\
-                                    GENERATED_GBL_DATA_SIZE)
 
 /* default load address = (CONFIG_SYS_TEXT_BASE - (40<<20))*/                      
 #define CONFIG_SYS_LOAD_ADDR	0x30800000
-
-
 
 #elif (CONFIG_SYS_TEXT_BASE == CONFIG_SYS_SDRAM_BASE)
 /*         0x30000000->0x34000000 (0M:64M)
@@ -226,12 +220,6 @@
  * code +  tmp stack |pad1 |boot param |gd |stack   |load addr|   |
  *----------------------------------------------------------------|
  */
-
-#define CONFIG_BOOT_PARAM_ADDR	(CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE +\
-                                    CONFIG_MIN_PAD_SIZE)/* boot parameters address */
-                                        
-#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_BOOT_PARAM_ADDR + CONFIG_PRIVATE_SIZE -\
-                                    GENERATED_GBL_DATA_SIZE)
 /* default load address = (0x34000000 - (40<<20))*/                      
 #define CONFIG_SYS_LOAD_ADDR	0x31800000
   
@@ -239,8 +227,13 @@
 #error Elvon:unsupport ram layout. 
 #endif
 
-#define CONFIG_SYS_TMP_SP_ADDR  (CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE - \
-                                    CONFIG_MIN_PAD_SIZE)
+#define CONFIG_SYS_TMP_SP_ADDR  (CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE)
+/* boot parameters address */
+#define CONFIG_BOOT_PARAM_ADDR	(CONFIG_SYS_TMP_SP_ADDR +  CONFIG_TMP_STACK_SIZE)
+                                        
+#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_BOOT_PARAM_ADDR + CONFIG_BOOT_PARAM_SIZE +\
+                                CONFIG_PRIVATE_SIZE -GENERATED_GBL_DATA_SIZE)
+
 
 /*-----------------------------------------------------------------------
  * Nand FLASH organization
