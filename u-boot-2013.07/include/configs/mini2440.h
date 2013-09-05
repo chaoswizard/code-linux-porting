@@ -388,18 +388,23 @@
        		"bootm ${loadaddr}\0"\
 	"boot-kernel-tftp=tftp ${loadaddr} ${name-kernel}; "	\
 	 	"bootm ${loadaddr}\0"	\
-	"tftp2nand-uboot=tftp ${loadaddr} ${name-uboot};"	\
+	"install2nand-uboot="	\
         	"nand erase ${ofs-uboot} ${filesize};"	\
         	"nand write ${fileaddr} ${ofs-uboot} ${filesize}\0"	\
-	"tftp2nand-kernel=tftp ${loadaddr} ${name-kernel};"	\
+	"install2nand-kernel="	\
         	"nand erase ${ofs-kernel} ${filesize};"	\
         	"nand write ${fileaddr} ${ofs-kernel} ${filesize}\0"	\
-	"tftp2nand-rootfs=tftp ${loadaddr} ${name-rootfs};"	\
+	"install2nand-rootfs="	\
         	"nand erase ${ofs-rootfs} ${filesize};"	\
         	"nand write.yaffs ${fileaddr} ${ofs-rootfs} ${filesize}\0"	\
+	"tftp2nand-uboot=tftp ${loadaddr} ${name-uboot};"	\
+        	"run install2nand-uboot\0"	\
+	"tftp2nand-kernel=tftp ${loadaddr} ${name-kernel};"	\
+        	"run install2nand-kernel\0"	\
+	"tftp2nand-rootfs=tftp ${loadaddr} ${name-rootfs};"	\
+        	"run install2nand-rootfs\0"	\
 	"uart2nand-uboot=loadb ${loadaddr};"	\
-        	"nand erase ${ofs-uboot} ${filesize};"	\
-        	"nand write ${fileaddr} ${ofs-uboot} ${filesize}\0"	\
+        	"run install2nand-uboot\0"	\
 	"nand-erase-env=nand erase " __stringify(IMG_PARAM_OFFSET)" " __stringify(IMG_PARAM_SIZE) "\0"\
 	"set-args-yaffs=setenv bootargs "  CONFIG_BOOTARGS_YAFFS "\0"\
 	"set-args-ramdisk=setenv bootargs " CONFIG_BOOTARGS_RAMDISK "\0"\
