@@ -317,9 +317,9 @@ static void print_init_f_info(ulong bootflag)
 #if defined(CONFIG_SYS_LOAD_ADDR)
     DEBUG_NUM_LL ("Load Addr",    CONFIG_SYS_LOAD_ADDR);
 #endif
-    DEBUG_NUM_LL("bootfalg", bootflag);
+    DEBUG_NUM_LL("bootflag", bootflag);
 
-    DEBUG_NUM_LL("gloable_data at:", gd);
+    DEBUG_NUM_LL("Global Data(Current):", gd);
 
 	gd_mon_len = _bss_end_ofs;
 #ifdef CONFIG_OF_EMBED
@@ -415,7 +415,7 @@ static void print_init_f_info(ulong bootflag)
 	addr_sp -= sizeof (gd_t);
 	id = (gd_t *) addr_sp;
 
-    print_addr_info("Reserving for Global Data", addr_sp, sizeof (gd_t));
+    print_addr_info("Reserving for Global Data(New)", addr_sp, sizeof (gd_t));
 
 #if defined(CONFIG_OF_SEPARATE) && defined(CONFIG_OF_CONTROL)
 	/*
