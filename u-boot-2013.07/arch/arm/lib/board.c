@@ -342,12 +342,14 @@ static void print_init_f_info(ulong bootflag)
 	 * Ram is setup, size stored in gd !!
 	 */
 	gd_ram_size = PHYS_SDRAM_SIZE;
-	DEBUG_NUM_LL("ramsize", gd_ram_size);
+	DEBUG_NUM_LL("RAM SIZE", gd_ram_size);
 #if defined(CONFIG_SYS_MEM_TOP_HIDE)
 	gd_ram_size -= CONFIG_SYS_MEM_TOP_HIDE;
+    DEBUG_NUM_LL("TopHideSize", CONFIG_SYS_MEM_TOP_HIDE);
 #endif
 
 	addr = CONFIG_SYS_SDRAM_BASE + gd_ram_size;
+    print_addr_info("RAM Top", addr, gd_ram_size);
 
 #ifdef CONFIG_LOGBUFFER
 #ifndef CONFIG_ALT_LB_ADDR
