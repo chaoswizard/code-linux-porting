@@ -455,9 +455,9 @@ static void print_init_f_info(ulong bootflag)
 	gd_relocaddr = addr;
 	gd_start_addr_sp = addr_sp;
 	gd_reloc_off = addr - _TEXT_BASE;
-	DEBUG_NUM_LL("relocation addr is:", gd_relocaddr);
-	DEBUG_NUM_LL("relocation Offset is:", gd_reloc_off);
-	DEBUG_NUM_LL("start sp is:", gd_start_addr_sp);
+	DEBUG_NUM_LL("Relocation addr:", gd_relocaddr);
+	DEBUG_NUM_LL("Relocation Offset:", gd_reloc_off);
+	DEBUG_NUM_LL("start SP:", gd_start_addr_sp);
 
 }
 #endif
