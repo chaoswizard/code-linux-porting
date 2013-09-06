@@ -391,7 +391,7 @@ static void print_init_f_info(ulong bootflag)
 	addr -= gd_mon_len;
 	addr &= ~(4096 - 1);
 
-	print_addr_info("Reserving mem for U-Boot(K)", addr, gd_mon_len >> 10);
+	print_addr_info("Reserving for Code, Data & Bss", addr, gd_mon_len);
 
 #ifndef CONFIG_SPL_BUILD
 	/*
@@ -399,7 +399,7 @@ static void print_init_f_info(ulong bootflag)
 	 */
 	addr_sp = addr - TOTAL_MALLOC_LEN;
 
-	print_addr_info("Reserving malloc for U-Boot(K)", addr_sp, TOTAL_MALLOC_LEN >> 10);
+	print_addr_info("Reserving for malloc", addr_sp, TOTAL_MALLOC_LEN);
     
 	/*
 	 * (permanently) allocate a Board Info struct
@@ -410,7 +410,6 @@ static void print_init_f_info(ulong bootflag)
 	new_gd_bd = bd;
     
 	print_addr_info("Reserving for Board Info", addr_sp, sizeof (bd_t));
-	print_addr_info("New GloableData",new_gd_bd, sizeof (bd_t));
 
 
 	addr_sp -= sizeof (gd_t);
@@ -437,7 +436,7 @@ static void print_init_f_info(ulong bootflag)
 	gd_irq_sp = addr_sp;
 #ifdef CONFIG_USE_IRQ
 	addr_sp -= (CONFIG_STACKSIZE_IRQ+CONFIG_STACKSIZE_FIQ);
-    print_addr_info("Reserving for IRQ stack", addr_sp, CONFIG_STACKSIZE_FIQ);
+    print_addr_info("Reserving for IRQ Stack", addr_sp, CONFIG_STACKSIZE_FIQ);
 #endif
 	/* leave 3 words for abort-stack    */
 	addr_sp -= 12;
