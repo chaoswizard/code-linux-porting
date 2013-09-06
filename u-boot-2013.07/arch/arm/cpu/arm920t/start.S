@@ -31,11 +31,9 @@
 #undef DEBUG_LL
 # if defined(CONFIG_DEBUG_LL)
 # define DEBUG_LL(t,v)  	mov r0, t;mov r1, v;bl debug_ll
-# define DEBUG_LL_SP(t,v)  ldr	sp, =CONFIG_SYS_TMP_SP_ADDR;mov r0, t;mov r1, v;bl debug_ll
 # define DEBUG_LL_INIT()   ldr	sp, =CONFIG_SYS_TMP_SP_ADDR;bl debug_ll_init
 # else
 # define DEBUG_LL(t,v) 
-# define DEBUG_LL_SP(t,v) 
 # define DEBUG_LL_INIT()  	
 # endif
 /*
@@ -232,20 +230,19 @@ copyex:
 	bl	cpu_init_crit
 #endif
 	DEBUG_LL_INIT();
-	DEBUG_LL(#5, pc);
-#if defined(CONFIG_NAND_SPL)
+	DEBUG_LL(#0, pc);	
+#if defined(CONFIG_NAND_SPL)	
+	DEBUG_LL(#2, pc);
     /*wx:temp stack for call c function, nand_boot*/
 	ldr	sp, =CONFIG_SYS_TMP_SP_ADDR @wx: this address must in dram valid area
-	DEBUG_LL(#3, pc);
 	@ load U-Boot to RAM
-	ldr r0, _nand_boot_ofs
-	mov pc, r0
-
-_nand_boot_ofs:
-	.word nand_boot
+	@ldr r0, _nand_boot_ofs
+	@mov pc, r0
+	bl nand_boot
+@_nand_boot_ofs:
+@	.word nand_boot
 # else
-	DEBUG_LL_SP(#2, pc);	
-	DEBUG_LL_SP(#4, pc);
+	DEBUG_LL(#3, pc);
 	@ldr r0, =CONFIG_SYS_TEXT_BASE
 	@bl relocate_code
 	bl	_main

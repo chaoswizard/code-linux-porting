@@ -131,17 +131,16 @@
 
 /**************************************/
 
-_TEXT_BASE:
-	.word	CONFIG_SYS_TEXT_BASE
-
 .globl lowlevel_init
 lowlevel_init:
 	/* memory control configuration */
 	/* make r0 relative the current location so that it */
 	/* reads SMRDATA out of FLASH rather than memory ! */
 	ldr     r0, =SMRDATA
-	ldr	r1, _TEXT_BASE
-	sub	r0, r0, r1/*calc the offset between entry and SMRDATA */
+	ldr	r1, =lowlevel_init /* get symbol link address*/
+	sub	r0, r0, r1  /*calc the offset between lowlevel_init and SMRDATA */
+	adr	r3, lowlevel_init  /*get the pc of lowlevel_init(runtime address)*/
+	add	r0, r0, r3  /*calc the  SMRDATA addrress(runtime)*/
 	ldr	r1, =BWSCON	/* Bus Width Status Controller */
 	add     r2, r0, #13*4
 0:

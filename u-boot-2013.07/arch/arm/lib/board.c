@@ -275,6 +275,193 @@ init_fnc_t *init_sequence[] = {
 	NULL,
 };
 
+
+#ifdef CONFIG_DEBUG_LL
+static void print_addr_info(const char *type, ulong addr, ulong size)
+{
+    DEBUG_NUM_LL (type,    0);
+    DEBUG_NUM_LL ("Addr",    addr);
+    DEBUG_NUM_LL ("Size",    size);
+
+}
+
+static void print_init_f_info(ulong bootflag)
+{
+	bd_t *bd, *new_gd_bd;
+	init_fnc_t **init_fnc_ptr;
+	gd_t *id;
+	ulong addr, addr_sp;
+#ifdef CONFIG_PRAM
+	ulong reg;
+#endif
+	void *new_fdt = NULL;
+	size_t fdt_size = 0;
+    ulong gd_mon_len;
+    ulong gd_dt_blob;
+    ulong gd_ram_size;
+    ulong gd_arch_tlb_size, gd_arch_tlb_add;
+    ulong gd_irq_sp,gd_relocaddr,gd_start_addr_sp,gd_reloc_off;
+
+    DEBUG_NUM_LL ("Text Entry",    CONFIG_SYS_TEXT_BASE);
+    DEBUG_NUM_LL ("Text Base",    _TEXT_BASE);
+
+#if defined(CONFIG_SYS_TMP_SP_ADDR)
+    DEBUG_NUM_LL ("Temp Stack",    CONFIG_SYS_TMP_SP_ADDR);
+#endif
+#if defined(CONFIG_BOOT_PARAM_ADDR)
+    DEBUG_NUM_LL ("Boot Param",    CONFIG_BOOT_PARAM_ADDR);
+#endif
+#if defined(CONFIG_SYS_INIT_SP_ADDR)
+    DEBUG_NUM_LL ("Init Stack",    CONFIG_SYS_INIT_SP_ADDR);
+#endif
+#if defined(CONFIG_SYS_LOAD_ADDR)
+    DEBUG_NUM_LL ("Load Addr",    CONFIG_SYS_LOAD_ADDR);
+#endif
+    DEBUG_NUM_LL("bootfalg", bootflag);
+
+    DEBUG_NUM_LL("gloable_data at:", gd);
+
+	gd_mon_len = _bss_end_ofs;
+#ifdef CONFIG_OF_EMBED
+	/* Get a pointer to the FDT */
+	gd_dt_blob = _binary_dt_dtb_start;
+#elif defined CONFIG_OF_SEPARATE
+	/* FDT is at end of image */
+	gd_dt_blob = (void *)(_end_ofs + _TEXT_BASE);
+#endif
+	/* Allow the early environment to override the fdt address */
+	gd_dt_blob = (void *)getenv_ulong("fdtcontroladdr", 16,
+						gd_dt_blob);
+
+	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
+        DEBUG_NUM_LL("initfunc:", init_fnc_ptr);
+	}
+
+	DEBUG_NUM_LL("monitor len", gd_mon_len);
+	/*
+	 * Ram is setup, size stored in gd !!
+	 */
+	gd_ram_size = PHYS_SDRAM_SIZE;
+	DEBUG_NUM_LL("ramsize", gd_ram_size);
+#if defined(CONFIG_SYS_MEM_TOP_HIDE)
+	gd_ram_size -= CONFIG_SYS_MEM_TOP_HIDE;
+#endif
+
+	addr = CONFIG_SYS_SDRAM_BASE + gd_ram_size;
+
+#ifdef CONFIG_LOGBUFFER
+#ifndef CONFIG_ALT_LB_ADDR
+	/* reserve kernel log buffer */
+	addr -= (LOGBUFF_RESERVE);
+	print_addr_info("logbuffer", addr, LOGBUFF_LEN);
+#endif
+#endif
+
+#ifdef CONFIG_PRAM
+	/*
+	 * reserve protected RAM
+	 */
+	reg = getenv_ulong("pram", 10, CONFIG_PRAM);
+	addr -= (reg << 10);		/* size is in kB */
+	print_addr_info("Resrved Ram", addr, reg);
+#endif /* CONFIG_PRAM */
+
+#if !(defined(CONFIG_SYS_ICACHE_OFF) && defined(CONFIG_SYS_DCACHE_OFF))
+	/* reserve TLB table */
+	gd_arch_tlb_size = 4096 * 4;
+	addr -= gd_arch_tlb_size;
+
+	/* round down to next 64 kB limit */
+	addr &= ~(0x10000 - 1);
+
+	print_addr_info("TLB", addr, gd_arch_tlb_size);
+#endif
+
+	/* round down to next 4 kB limit */
+	addr &= ~(4096 - 1);
+	DEBUG_NUM_LL("Top of RAM For U-Boot:", addr);
+
+
+	/*
+	 * reserve memory for U-Boot code, data & bss
+	 * round down to next 4 kB limit
+	 */
+	addr -= gd_mon_len;
+	addr &= ~(4096 - 1);
+
+	print_addr_info("Reserving mem for U-Boot(K)", addr, gd_mon_len >> 10);
+
+#ifndef CONFIG_SPL_BUILD
+	/*
+	 * reserve memory for malloc() arena
+	 */
+	addr_sp = addr - TOTAL_MALLOC_LEN;
+
+	print_addr_info("Reserving malloc for U-Boot(K)", addr_sp, TOTAL_MALLOC_LEN >> 10);
+    
+	/*
+	 * (permanently) allocate a Board Info struct
+	 * and a permanent copy of the "global" data
+	 */
+	addr_sp -= sizeof (bd_t);
+	bd = (bd_t *) addr_sp;
+	new_gd_bd = bd;
+    
+	print_addr_info("Reserving for Board Info", addr_sp, sizeof (bd_t));
+	print_addr_info("New GloableData",new_gd_bd, sizeof (bd_t));
+
+
+	addr_sp -= sizeof (gd_t);
+	id = (gd_t *) addr_sp;
+
+    print_addr_info("Reserving for Global Data", addr_sp, sizeof (gd_t));
+
+#if defined(CONFIG_OF_SEPARATE) && defined(CONFIG_OF_CONTROL)
+	/*
+	 * If the device tree is sitting immediate above our image then we
+	 * must relocate it. If it is embedded in the data section, then it
+	 * will be relocated with other data.
+	 */
+	if (gd_dt_blob) {
+		fdt_size = ALIGN(fdt_totalsize(gd_dt_blob) + 0x1000, 32);
+
+		addr_sp -= fdt_size;
+		new_fdt = (void *)addr_sp;
+        print_addr_info("Reserving for FDT", addr_sp, fdt_size);
+	}
+#endif
+
+	/* setup stackpointer for exeptions */
+	gd_irq_sp = addr_sp;
+#ifdef CONFIG_USE_IRQ
+	addr_sp -= (CONFIG_STACKSIZE_IRQ+CONFIG_STACKSIZE_FIQ);
+    print_addr_info("Reserving for IRQ stack", addr_sp, CONFIG_STACKSIZE_FIQ);
+#endif
+	/* leave 3 words for abort-stack    */
+	addr_sp -= 12;
+
+	/* 8-byte alignment for ABI compliance */
+	addr_sp &= ~0x07;
+#else
+	addr_sp += 128;	/* leave 32 words for abort-stack   */
+	gd_irq_sp = addr_sp;
+#endif
+    
+
+	DEBUG_NUM_LL("New Stack Pointer is:", addr_sp);
+
+
+	gd_relocaddr = addr;
+	gd_start_addr_sp = addr_sp;
+	gd_reloc_off = addr - _TEXT_BASE;
+	DEBUG_NUM_LL("relocation addr is:", gd_relocaddr);
+	DEBUG_NUM_LL("relocation Offset is:", gd_reloc_off);
+	DEBUG_NUM_LL("start sp is:", gd_start_addr_sp);
+
+}
+#endif
+
+
 void board_init_f(ulong bootflag)
 {
 	bd_t *bd;
@@ -289,6 +476,10 @@ void board_init_f(ulong bootflag)
 
     DEBUG_LL(1, gd);
 
+#ifdef CONFIG_DEBUG_LL
+    print_init_f_info(bootflag);
+#endif
+
 	memset((void *)gd, 0, sizeof(gd_t));
 
 	gd->mon_len = _bss_end_ofs;
@@ -302,14 +493,14 @@ void board_init_f(ulong bootflag)
 	/* Allow the early environment to override the fdt address */
 	gd->fdt_blob = (void *)getenv_ulong("fdtcontroladdr", 16,
 						(uintptr_t)gd->fdt_blob);
-    DEBUG_LL(3, gd);
 
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
+        DEBUG_LL(2, init_fnc_ptr);
 		if ((*init_fnc_ptr)() != 0) {
 			hang ();
 		}
 	}
-
+    DEBUG_LL(5, init_fnc_ptr);
 #ifdef CONFIG_OF_CONTROL
 	/* For now, put this check after the console is ready */
 	if (fdtdec_prepare_fdt()) {

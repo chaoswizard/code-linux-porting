@@ -51,9 +51,11 @@
 //#define CONFIG_MTD_DEBUG_VERBOSE 3
 
 #ifdef CONFIG_DEBUG_LL
-#define DEBUG_LL(x, y)   debug_ll((unsigned int)(x), (unsigned int)(y))
+#define DEBUG_LL(x, y)       debug_ll((unsigned int)(x), (unsigned int)(y))
+#define DEBUG_NUM_LL(x, y)   debug_ll_num((x), (unsigned int)(y))
 #else
 #define DEBUG_LL(x, y)
+#define DEBUG_NUM_LL(x, y) 
 #endif
 
 /*
@@ -203,7 +205,6 @@
 #if (CONFIG_SYS_TEXT_BASE == 0x33000000)
 /*         0x33000000->0x34000000 (48M:16M)
  *------------ 48M -------|-----------------   16M  -------------------------|
- *------------------------|----- 8M----------|-------------------------------|
  *---------------------------------------------------------------------------|
  * unused |load addr|pad2 |code +  tmp stack |pad1 |boot param |gd |stack    |
  *----------------------------------------------------------------------------
@@ -214,8 +215,6 @@
 
 #elif (CONFIG_SYS_TEXT_BASE == CONFIG_SYS_SDRAM_BASE)
 /*         0x30000000->0x34000000 (0M:64M)
- *----------------------------------------------------------------|
- *   8M              |        16K          |  64K   |   40M       |
  *----------------------------------------------------------------|
  * code +  tmp stack |pad1 |boot param |gd |stack   |load addr|   |
  *----------------------------------------------------------------|

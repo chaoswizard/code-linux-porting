@@ -45,6 +45,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #include <asm/io.h>
 
+#define BIT(x)			(1 << (x))
 
 #define PLL_M_VAL (((CONFIG_DEFAULT_MPLLCON & 0xFF000) >> 12) + 8)
 #define PLL_P_VAL (((CONFIG_DEFAULT_MPLLCON & 0x003F0) >> 4) + 2)
@@ -106,6 +107,7 @@ static void _delay_ms_(unsigned int t)
 #ifdef CONFIG_HWFLOW
 static int hwflow;
 #endif
+static void print_num(const char *name, ulong value);
 
 
 /* Initialise the serial port. The settings are always 8 data bits, no parity,
@@ -155,16 +157,14 @@ void debug_ll_init(void)
 	reg = _get_pclk_() / (16 * CONFIG_BAUDRATE) - 1;
 
 	writel(reg, &uart->ubrdiv);
-	for (i = 0; i < 100; i++)
-		/* Delay */ ;
-
+    _delay_ms_(5);
 }
 
 
 /*
  * Output a single byte to the serial port.
  */
-static void _uart_putc_(const char c)
+static __inline__ void _uart_putc_(const char c)
 {
 	struct s3c24x0_uart *uart = s3c24x0_get_base_uart(DEBUG_LL_UART_NR);
 
@@ -179,18 +179,20 @@ static void _uart_putc_(const char c)
     writeb(c, &uart->utxh);
 }
 
-#if 0
-static void puts(const char *str)
+static int _uart_puts_(const char *str)
 {
+    int len = 0;
 	while (*str) {
 		if (*str == '\n')
 			_uart_putc_('\r');
 		_uart_putc_(*str++);
+        len++;
 	}
-}
-#endif
 
-static void print_num(unsigned int t)
+    return len;
+}
+
+static void print_x(unsigned int t)
 {
 	int i, k=7;
 	char buf[8];
@@ -221,13 +223,17 @@ static void print_num(unsigned int t)
 
 
 
+#define DEBUG_LL_MODE_LED     0x01
+#define DEBUG_LL_MODE_SOUND   0x02
+
+
 
 #if defined(CONFIG_MINI2440_LED) || defined(CONFIG_MINI2440_SPEAKER)
-#define LED_SPK_VAL(a,b,c,d,s) (((a)<<8) | ((b)<<7) | ((c)<<6) | ((d)<<5) | ((s)<<0))
-static void speaker_led_play(int times)
+static void speaker_led_play(unsigned int mode, int times, int delay)
 {  
     struct s3c24x0_gpio *gpio = s3c24x0_get_base_gpio();
-    
+    unsigned long val_a, val_b,opt_bits;
+
     if (!times)
         return;
     
@@ -236,19 +242,28 @@ static void speaker_led_play(int times)
     writel(0x00295551, &gpio->gpbcon);//[10:17]=01010101,set as gpio
     writel(0x000001FF, &gpio->gpbup);//[5:8]=1110 (1:disable pullup)
 
-       
-    while (times--) {
+    val_a = val_b = 0;
 #if defined(CONFIG_MINI2440_SPEAKER)
-	writel(LED_SPK_VAL(0,1,1,1,1), &gpio->gpbdat);
-#else
-	writel(LED_SPK_VAL(1,1,1,1,0), &gpio->gpbdat);
-#endif
-        _delay_ms_(200);
-        writel(LED_SPK_VAL(0,0,0,0,0), &gpio->gpbdat);
-        _delay_ms_(400);
+    if (mode & DEBUG_LL_MODE_SOUND) {
+        opt_bits = (BIT(0) |BIT(8));//for debug, led 4, opend
+        val_a |= opt_bits;
+        val_b &= ~opt_bits;
     }
-   writel(LED_SPK_VAL(0,0,1,0,0), &gpio->gpbdat);
-    _delay_ms_(1000);
+#endif
+
+#if defined(CONFIG_MINI2440_LED)
+    if (mode & DEBUG_LL_MODE_LED) {
+        opt_bits = (BIT(5) |BIT(6) |BIT(7));
+        val_a |= opt_bits;
+        val_b &= ~opt_bits;
+    }
+#endif
+    while (times--) {
+    	writel(val_a, &gpio->gpbdat);
+        _delay_ms_(delay);
+        writel(val_b, &gpio->gpbdat);
+        _delay_ms_(delay<<1);
+    }
 }
 #endif
 
@@ -256,26 +271,33 @@ static void speaker_led_play(int times)
 
 void debug_ll(unsigned int num1, unsigned int num2)
 {
-	print_num(num1);
+# if defined(CONFIG_MINI2440_LED)
+     speaker_led_play(DEBUG_LL_MODE_LED, 3, 64);
+#endif
+	_uart_putc_('#');
+	print_x(num1);
 	_uart_putc_(':');
-	print_num(num2);
+	print_x(num2);
 	_uart_putc_('\r');
 	_uart_putc_('\n');
 # if defined(CONFIG_MINI2440_LED) || defined(CONFIG_MINI2440_SPEAKER)
-	speaker_led_play(num1);
+	speaker_led_play(DEBUG_LL_MODE_LED | DEBUG_LL_MODE_SOUND, num1,192);
+    _delay_ms_(1024);
 #endif
 }
 
 
-
-
-
-
-
-
-
-
-
+void debug_ll_num(const char *name, ulong value)
+{
+    int len;
+    len = _uart_puts_(name);
+    while (len++ < 12) {
+        _uart_putc_(' ');
+    }
+    print_x(value);
+	_uart_putc_('\r');
+	_uart_putc_('\n');
+}
 
 
 #endif /* CONFIG_S3C24X0 */
