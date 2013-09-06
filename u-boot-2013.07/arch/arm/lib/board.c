@@ -475,8 +475,6 @@ void board_init_f(ulong bootflag)
 	void *new_fdt = NULL;
 	size_t fdt_size = 0;
 
-    DEBUG_LL(1, gd);
-
 #ifdef CONFIG_DEBUG_LL
     print_init_f_info(bootflag);
 #endif
@@ -501,7 +499,7 @@ void board_init_f(ulong bootflag)
 			hang ();
 		}
 	}
-    DEBUG_LL(5, init_fnc_ptr);
+    DEBUG_LL(6, init_fnc_ptr);
 #ifdef CONFIG_OF_CONTROL
 	/* For now, put this check after the console is ready */
 	if (fdtdec_prepare_fdt()) {

@@ -278,7 +278,7 @@ void nand_boot(void)
 	nand_load(&nand_info, CONFIG_SYS_NAND_U_BOOT_OFFS, CONFIG_SYS_NAND_U_BOOT_SIZE,
 		  (uchar *)CONFIG_SYS_NAND_U_BOOT_DST);
 
-    DEBUG_LL(7, &nand_chip);
+    DEBUG_LL(5, &nand_chip);
 
 #ifdef CONFIG_NAND_ENV_DST
 	nand_load(&nand_info, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE,
@@ -293,6 +293,7 @@ void nand_boot(void)
 	if (nand_chip.select_chip)
 		nand_chip.select_chip(&nand_info, -1);
 
+    DEBUG_LL(7, &nand_chip);
 	/*
 	 * Jump to U-Boot image
 	 */

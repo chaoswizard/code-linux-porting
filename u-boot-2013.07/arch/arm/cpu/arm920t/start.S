@@ -232,7 +232,7 @@ copyex:
 	DEBUG_LL_INIT();
 	DEBUG_LL(#0, pc);	
 #if defined(CONFIG_NAND_SPL)	
-	DEBUG_LL(#2, pc);
+	DEBUG_LL(#1, pc);
     /*wx:temp stack for call c function, nand_boot*/
 	ldr	sp, =CONFIG_SYS_TMP_SP_ADDR @wx: this address must in dram valid area
 	@ load U-Boot to RAM
@@ -242,7 +242,7 @@ copyex:
 @_nand_boot_ofs:
 @	.word nand_boot
 # else
-	DEBUG_LL(#3, pc);
+	DEBUG_LL(#2, pc);
 	@ldr r0, =CONFIG_SYS_TEXT_BASE
 	@bl relocate_code
 	bl	_main
