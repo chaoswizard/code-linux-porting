@@ -294,7 +294,9 @@ void debug_ll_num(const char *name, ulong value)
     while (len++ < 12) {
         _uart_putc_(' ');
     }
-    print_x(value);
+    
+    if (value != 0)
+        print_x(value);
 	_uart_putc_('\r');
 	_uart_putc_('\n');
 }
