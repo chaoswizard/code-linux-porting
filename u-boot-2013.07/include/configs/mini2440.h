@@ -204,6 +204,7 @@
 #define CONFIG_LOAD_BUF_OFS   (10<<20)
 
 #if (CONFIG_SYS_TEXT_BASE <= CONFIG_SYS_SDRAM_BASE)
+// load from ram for nandboot(0x0) or producer(0x30000000)
 /*         0x30000000->0x34000000 (0M:64M)
  *----------------------------------------------------------------|
  * code +  tmp stack |pad1 |boot param |gd |stack   |load addr|   |
@@ -214,6 +215,7 @@
 #define CONFIG_SYS_TMP_SP_ADDR  (CONFIG_SYS_SDRAM_BASE + CONFIG_MAX_CODE_SIZE)
 
 #elif (CONFIG_SYS_TEXT_BASE >= 0x33000000)
+//u-boot code
 /*         0x33000000->0x34000000 (48M:16M)
  *------------ 48M -------|-----------------   16M  -------------------------|
  *---------------------------------------------------------------------------|
@@ -225,6 +227,7 @@
 #define CONFIG_SYS_TMP_SP_ADDR  (CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE)
 
 #else
+// test u-boot code
 #define CONFIG_SYS_TMP_SP_ADDR  (CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE)
 #define CONFIG_SYS_LOAD_ADDR	(CONFIG_SYS_TMP_SP_ADDR + CONFIG_LOAD_BUF_OFS)
 #endif
@@ -303,7 +306,7 @@
 /* ====================================================*/
 
 #if defined(CONFIG_NAND_SPL)
-#define CONFIG_SYS_NAND_U_BOOT_DST	0x30000000		/* uboot.bin load addr */
+#define CONFIG_SYS_NAND_U_BOOT_DST	0x33000000		/* uboot.bin load addr */
 #define CONFIG_SYS_NAND_U_BOOT_START CONFIG_SYS_NAND_U_BOOT_DST	/* uboot.bin run-addr */
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	 (4 << 10)      		/* uboot.bin Offset on nand */
 #define CONFIG_SYS_NAND_U_BOOT_SIZE	 IMG_UBOOT_SIZE		/* uboot.bin size on nand */
