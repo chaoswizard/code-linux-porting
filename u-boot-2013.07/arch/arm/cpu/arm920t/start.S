@@ -238,13 +238,11 @@ copyex:
 	@ load U-Boot to RAM
 	@ldr r0, _nand_boot_ofs
 	@mov pc, r0
-	bl nand_boot
+	b nand_boot
 @_nand_boot_ofs:
 @	.word nand_boot
 # else
 	DEBUG_LL(#2, pc);
-	@ldr r0, =CONFIG_SYS_TEXT_BASE
-	@bl relocate_code
 	bl	_main
 # endif
 /*------------------------------------------------------------------------------*/

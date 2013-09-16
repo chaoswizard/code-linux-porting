@@ -24,6 +24,7 @@
 #include <asm/arch/s3c24x0_cpu.h>
 #include <asm/io.h>
 
+/*-------------- NFCONT --------------------------*/
 /*wx: SpareEccLock*/
 #define S3C2440_NFCONT_SECCL       (1<<6)
 /*wx: MainEccLock*/
@@ -34,12 +35,30 @@
 #define S3C2440_NFCONT_nCE         (1<<1)
 /*wx: NandFlash Controller Enable(1)/Disable(0)*/
 #define S3C2440_NFCONT_MODE        (1<<0)
+/*wx: initialize ecc decoder/encoder*/
+#define S3C2440_NFCONT_RnB_MODE    (1 << 8)
+
+/*--------------- NFCONF --------------------------*/
 /*wx: NFCONF[13:12]*/
 #define S3C2440_NFCONF_TACLS(x)    ((x)<<12)
 /*wx: NFCONF[10:8]*/
 #define S3C2440_NFCONF_TWRPH0(x)   ((x)<<8)
 /*wx: NFCONF[6:4]*/
 #define S3C2440_NFCONF_TWRPH1(x)   ((x)<<4)
+
+/*wx: NFCONF[0]*/
+#define S3C2440_NFCONF_BUSWIDTH(x)  ((x) << 0) //decide by HW connect
+
+/*--------------- NFSTAT --------------------------*/
+/*wx: NFSTAT[2]*/
+#define S3C2440_NFSTAT_RnB         (1 << 2)
+/*wx: NFSTAT[1]*/
+#define S3C2440_NFSTAT_nCE         (1 << 1)
+/*wx: NFSTAT[0]*/
+#define S3C2440_NFSTAT_BUSY	       (1 << 0)
+
+
+
 
 /*wx: below two macro's  value mapped real must interchange each other.
  * becaule the default register is ALE, if not use CLE, MUST Clear the bit.
@@ -102,7 +121,7 @@ static int s3c2440_dev_ready(struct mtd_info *mtd)
 {
 	struct s3c2440_nand *nand = s3c2440_get_base_nand();
 	debug("dev_ready\n");
-	return readl(&nand->nfstat) & 0x01;
+	return readl(&nand->nfstat) & S3C2440_NFSTAT_BUSY;
 }
 
 #ifdef CONFIG_S3C2440_NAND_HWECC
@@ -216,15 +235,17 @@ int board_nand_init(struct nand_chip *nand)
 	twrph0 = 3; // 20 ns
 	twrph1 = 1; // 20 ns
 #endif
-
-	cfg = S3C2440_NFCONF_TACLS(tacls);
+   cfg = S3C2440_NFCONF_BUSWIDTH(0);
+	cfg |= S3C2440_NFCONF_TACLS(tacls);
 	cfg |= S3C2440_NFCONF_TWRPH0(twrph0 - 1);
 	cfg |= S3C2440_NFCONF_TWRPH1(twrph1 - 1);
 	writel(cfg, &nand_reg->nfconf);
 
+
 	cfg = S3C2440_NFCONT_SECCL;
 	cfg |= S3C2440_NFCONT_MECCL;
 	cfg |= S3C2440_NFCONT_MODE;
+   cfg &= ~S3C2440_NFCONT_RnB_MODE;//wx: detect rise edge, 
 	writel(cfg, &nand_reg->nfcont);
 
 	/* initialize nand_chip data structure */

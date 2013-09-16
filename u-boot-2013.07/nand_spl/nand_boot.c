@@ -218,6 +218,12 @@ static int nand_load(struct mtd_info *mtd, unsigned int offs,
 	unsigned int block, lastblock;
 	unsigned int page;
 
+
+	DEBUG_LL(0x40, offs);
+    DEBUG_LL(0x41, uboot_size);
+    DEBUG_LL(0x42, dst);
+    
+
 	/*
 	 * offs has to be aligned to a page address!
 	 */
@@ -227,6 +233,7 @@ static int nand_load(struct mtd_info *mtd, unsigned int offs,
 
 	while (block <= lastblock) {
 		if (!nand_is_bad_block(mtd, block)) {
+            DEBUG_LL(0x43, block);
 			/*
 			 * Skip bad blocks
 			 */
@@ -238,6 +245,7 @@ static int nand_load(struct mtd_info *mtd, unsigned int offs,
 
 			page = 0;
 		} else {
+            DEBUG_LL(0x44, block);
 			lastblock++;
 		}
 
@@ -258,7 +266,9 @@ void nand_boot(void)
 	nand_info_t nand_info;
 	__attribute__((noreturn)) void (*uboot)(void);
 
-	DEBUG_LL(3, nand_boot);
+    DEBUG_LL(0x13, CONFIG_SYS_TMP_SP_ADDR);
+        
+    
 	/*
 	 * Init board specific nand support
 	 */
@@ -267,24 +277,31 @@ void nand_boot(void)
 	nand_chip.IO_ADDR_R = nand_chip.IO_ADDR_W = (void  __iomem *)CONFIG_SYS_NAND_BASE;
 	nand_chip.dev_ready = NULL;	/* preset to NULL */
 	nand_chip.options = 0;
-	board_nand_init(&nand_chip);
 
+	DEBUG_LL(0x14, board_nand_init);
+    
+	board_nand_init(&nand_chip);
+    
 	if (nand_chip.select_chip)
 		nand_chip.select_chip(&nand_info, 0);
 
+	nand_chip.cmd_ctrl(&nand_info, NAND_CMD_RESET, 0);
+
+	DEBUG_LL(0x15, 0);
 	/*
 	 * Load U-Boot image from NAND into RAM
 	 */
 	nand_load(&nand_info, CONFIG_SYS_NAND_U_BOOT_OFFS, CONFIG_SYS_NAND_U_BOOT_SIZE,
 		  (uchar *)CONFIG_SYS_NAND_U_BOOT_DST);
 
-    DEBUG_LL(5, &nand_chip);
 
 #ifdef CONFIG_NAND_ENV_DST
+	DEBUG_LL(0x16, 0);
 	nand_load(&nand_info, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE,
 		  (uchar *)CONFIG_NAND_ENV_DST);
 
 #ifdef CONFIG_ENV_OFFSET_REDUND
+	DEBUG_LL(0x17, 0);
 	nand_load(&nand_info, CONFIG_ENV_OFFSET_REDUND, CONFIG_ENV_SIZE,
 		  (uchar *)CONFIG_NAND_ENV_DST + CONFIG_ENV_SIZE);
 #endif
@@ -293,10 +310,10 @@ void nand_boot(void)
 	if (nand_chip.select_chip)
 		nand_chip.select_chip(&nand_info, -1);
 
-    DEBUG_LL(7, &nand_chip);
 	/*
 	 * Jump to U-Boot image
 	 */
 	uboot = (void *)CONFIG_SYS_NAND_U_BOOT_START;
+    DEBUG_LL(0x18, uboot);
 	(*uboot)();
 }
