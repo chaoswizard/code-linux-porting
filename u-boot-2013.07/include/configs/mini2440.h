@@ -196,12 +196,9 @@
  * |      |  unused
  * --------------------------------------- low address 
  */
-#define CONFIG_MAX_LOAD_SIZE (40<<20)
-#define CONFIG_MAX_CODE_SIZE (8<<20)
-#define CONFIG_PRIVATE_SIZE  (16<<10)
-#define CONFIG_TMP_STACK_SIZE (64<<10)
-#define CONFIG_BOOT_PARAM_SIZE (2<<10)
-#define CONFIG_LOAD_BUF_OFS   (10<<20)
+#define CONFIG_MAX_LOAD_SIZE   (40<<20)
+#define CONFIG_MAX_CODE_SIZE   (8<<20)
+#define CONFIG_MAX_STACK_SIZE  (64<<10)
 
 #if (CONFIG_SYS_TEXT_BASE <= CONFIG_SYS_SDRAM_BASE)
 // load from ram for nandboot(0x0) or producer(0x30000000)
@@ -234,13 +231,9 @@
 #error "unknown memory layout of CONFIG_SYS_TEXT_BASE"
 #endif
 
-
-#define CONFIG_SYS_KERNEL_ADDR  0x30008000
-/* boot parameters address */
-#define CONFIG_BOOT_PARAM_ADDR	(CONFIG_SYS_TMP_SP_ADDR +  CONFIG_TMP_STACK_SIZE)
                                         
-#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_BOOT_PARAM_ADDR + CONFIG_BOOT_PARAM_SIZE +\
-                                CONFIG_PRIVATE_SIZE -GENERATED_GBL_DATA_SIZE)
+#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_TMP_SP_ADDR + CONFIG_MAX_STACK_SIZE -\
+                                 GENERATED_GBL_DATA_SIZE)
 
 
 /*-----------------------------------------------------------------------
@@ -291,7 +284,7 @@
 
 
 /* ====================================================
- * wx:image layout table, same as kernel config
+ * wx:image ROM layout, same as kernel mtd config
  */
 /*mtdblock0 [256K]*/
 #define  IMG_UBOOT_OFFSET     0
@@ -307,7 +300,17 @@
 
 /*mtdblock3 [-$]*/
 #define  IMG_ROOTFS_OFFSET    0x00560000
+
+/* ====================================================
+ * wx:image RAM layout, same as kernel link config
+ */
+/* boot kernel address */
+#define CONFIG_BOOT_KERNEL_ADDR  0x30008000
+/* boot parameters address */
+#define CONFIG_BOOT_PARAM_ADDR	 0x30000100
 /* ====================================================*/
+
+
 
 #if defined(CONFIG_NAND_SPL)
 #define CONFIG_SYS_NAND_U_BOOT_DST	0x33000000		/* uboot.bin load addr */
@@ -427,7 +430,7 @@
 	"size-kernel=" __stringify(IMG_KERNEL_SIZE) "\0"	\
 	"size-uboot=" __stringify(IMG_UBOOT_SIZE) "\0"	\
 	"loadaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
-	"kerneladdr="  __stringify(CONFIG_SYS_KERNEL_ADDR) "\0"	\
+	"kerneladdr="  __stringify(CONFIG_BOOT_KERNEL_ADDR) "\0"	\
 	"fileaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
     "boot-kernel-nand=nand read ${kerneladdr} ${ofs-kernel} ${size-kernel};"\
        		"bootm ${kerneladdr}\0"\

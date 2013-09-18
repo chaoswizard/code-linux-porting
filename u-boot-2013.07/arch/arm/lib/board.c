@@ -308,9 +308,7 @@ static void print_init_f_info(ulong bootflag)
 #if defined(CONFIG_SYS_TMP_SP_ADDR)
     DEBUG_NUM_LL ("Temp Stack",    CONFIG_SYS_TMP_SP_ADDR);
 #endif
-#if defined(CONFIG_BOOT_PARAM_ADDR)
-    DEBUG_NUM_LL ("Boot Param",    CONFIG_BOOT_PARAM_ADDR);
-#endif
+
 #if defined(CONFIG_SYS_INIT_SP_ADDR)
     DEBUG_NUM_LL ("Init Stack",    CONFIG_SYS_INIT_SP_ADDR);
 #endif
