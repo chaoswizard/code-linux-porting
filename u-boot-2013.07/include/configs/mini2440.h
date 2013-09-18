@@ -223,15 +223,19 @@
  *----------------------------------------------------------------------------
  */
 /* default load address = (CONFIG_SYS_TEXT_BASE - (40<<20))*/                      
-#define CONFIG_SYS_LOAD_ADDR	0x30800000
+#define CONFIG_SYS_LOAD_ADDR	0x30008000
 #define CONFIG_SYS_TMP_SP_ADDR  (CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE)
 
-#else
-// test u-boot code
+#elif (CONFIG_SYS_TEXT_BASE == 0x31800000)
+// test u-boot code, load by producer
+#define CONFIG_SYS_LOAD_ADDR	0x30008000
 #define CONFIG_SYS_TMP_SP_ADDR  (CONFIG_SYS_TEXT_BASE + CONFIG_MAX_CODE_SIZE)
-#define CONFIG_SYS_LOAD_ADDR	(CONFIG_SYS_TMP_SP_ADDR + CONFIG_LOAD_BUF_OFS)
+#else
+#error "unknown memory layout of CONFIG_SYS_TEXT_BASE"
 #endif
 
+
+#define CONFIG_SYS_KERNEL_ADDR  0x30008000
 /* boot parameters address */
 #define CONFIG_BOOT_PARAM_ADDR	(CONFIG_SYS_TMP_SP_ADDR +  CONFIG_TMP_STACK_SIZE)
                                         
@@ -423,28 +427,33 @@
 	"size-kernel=" __stringify(IMG_KERNEL_SIZE) "\0"	\
 	"size-uboot=" __stringify(IMG_UBOOT_SIZE) "\0"	\
 	"loadaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
+	"kerneladdr="  __stringify(CONFIG_SYS_KERNEL_ADDR) "\0"	\
 	"fileaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
-        "boot-kernel-nand=nand read ${loadaddr} ${ofs-kernel} ${size-kernel};"\
-       		"bootm ${loadaddr}\0"\
-	"boot-kernel-tftp=tftp ${loadaddr} ${name-kernel}; "	\
-	 	"bootm ${loadaddr}\0"	\
+    "boot-kernel-nand=nand read ${kerneladdr} ${ofs-kernel} ${size-kernel};"\
+       		"bootm ${kerneladdr}\0"\
+	"boot-kernel-tftp=tftp ${kerneladdr} ${name-kernel}; "	\
+	 	"bootm ${kerneladdr}\0"	\
 	"install2nand-uboot="	\
         	"nand erase ${ofs-uboot} ${filesize};"	\
         	"nand write ${fileaddr} ${ofs-uboot} ${filesize}\0"	\
 	"install2nand-kernel="	\
         	"nand erase ${ofs-kernel} ${filesize};"	\
         	"nand write ${fileaddr} ${ofs-kernel} ${filesize}\0"	\
-	"install2nand-rootfs="	\
+	"install2nand-yaffs="	\
         	"nand erase ${ofs-rootfs} ${filesize};"	\
         	"nand write.yaffs ${fileaddr} ${ofs-rootfs} ${filesize}\0"	\
 	"tftp2nand-uboot=tftp ${loadaddr} ${name-uboot};"	\
         	"run install2nand-uboot\0"	\
 	"tftp2nand-kernel=tftp ${loadaddr} ${name-kernel};"	\
         	"run install2nand-kernel\0"	\
-	"tftp2nand-rootfs=tftp ${loadaddr} ${name-rootfs};"	\
-        	"run install2nand-rootfs\0"	\
+	"tftp2nand-yaffs=tftp ${loadaddr} ${name-rootfs};"	\
+        	"run install2nand-yaffs\0"	\
 	"uart2nand-uboot=loadb ${loadaddr};"	\
         	"run install2nand-uboot\0"	\
+	"uart2nand-kernel=loadb ${loadaddr};"	\
+        	"run install2nand-kernel\0"	\
+	"uart2nand-yaffs=loadb ${loadaddr};"	\
+        	"run install2nand-yaffs\0"	\
 	"nand-erase-env=nand erase " __stringify(IMG_PARAM_OFFSET)" " __stringify(IMG_PARAM_SIZE) "\0"\
 	"set-args-yaffs=setenv bootargs "  CONFIG_BOOTARGS_YAFFS "\0"\
 	"set-args-ramdisk=setenv bootargs " CONFIG_BOOTARGS_RAMDISK "\0"\
