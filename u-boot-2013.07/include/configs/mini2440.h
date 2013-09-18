@@ -196,7 +196,6 @@
  * |      |  unused
  * --------------------------------------- low address 
  */
-#define CONFIG_MAX_LOAD_SIZE   (40<<20)
 #define CONFIG_MAX_CODE_SIZE   (8<<20)
 #define CONFIG_MAX_STACK_SIZE  (64<<10)
 
