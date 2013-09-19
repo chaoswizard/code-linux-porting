@@ -254,15 +254,27 @@
 #define CONFIG_SYS_NAND_PAGE_SIZE	(2 << 10)
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(128 << 10)
 #define CONFIG_SYS_NAND_PAGE_COUNT	64
-#define CONFIG_SYS_NAND_BAD_BLOCK_POS	0
 #define CONFIG_SYS_NAND_5_ADDR_CYCLE
 
 #define CONFIG_S3C2440_NAND_HWECC
+#define CONFIG_SYS_NAND_BAD_BLOCK_POS	0
+
+/* 
+ *|--------------------------------------------------------------|
+ *|                   nand flash block layout                    |
+ *|--------------------------------------------------------------|
+ *| block 0   [page0 |oob0 ] [page1 |oob1 ] [page(n-1) |oob(n-1)]|
+ *|--------------------------------------------------------------|
+ *| block 1   [page0 |oob0 ] [page1 |oob1 ] [page(n-1) |oob(n-1)]|
+ *|--------------------------------------------------------------|
+ *| block 2   [page0 |oob0 ] [page1 |oob1 ] [page(n-1) |oob(n-1)]|
+ *|--------------------------------------------------------------|
+ *| block(n-1)[page0 |oob0 ] [page1 |oob1 ] [page(n-1) |oob(n-1)]|
+ *|--------------------------------------------------------------|
+ */
 #define CONFIG_SYS_NAND_ECCSIZE		CONFIG_SYS_NAND_PAGE_SIZE
 #define CONFIG_SYS_NAND_ECCBYTES	4
-#define CONFIG_SYS_NAND_ECCSTEPS	(CONFIG_SYS_NAND_PAGE_SIZE/CONFIG_SYS_NAND_ECCSIZE)
 #define CONFIG_SYS_NAND_OOBSIZE		64
-#define CONFIG_SYS_NAND_ECCTOTAL	(CONFIG_SYS_NAND_ECCBYTES*CONFIG_SYS_NAND_ECCSTEPS)
 #define CONFIG_SYS_NAND_ECCPOS		{40, 41, 42, 43, 44, 45, 46, 47, \
 					48, 49, 50, 51, 52, 53, 54, 55, \
 					56, 57, 58, 59, 60, 61, 62, 63}
@@ -293,20 +305,20 @@
 /* ====================================================
  * wx:image ROM layout, same as kernel mtd config
  */
-/*mtdblock0 [256K]*/
+/*mtdblock0 [512K]*/
 #define  IMG_UBOOT_OFFSET     0
-#define  IMG_UBOOT_SIZE       0x00040000
+#define  IMG_UBOOT_SIZE       0x00080000
 
 /*mtdblock1 [128K]*/
-#define  IMG_PARAM_OFFSET     0x00040000
+#define  IMG_PARAM_OFFSET     0x00080000
 #define  IMG_PARAM_SIZE       0x00020000
 
 /*mtdblock2 [5M]/[4M-8M]*/
-#define  IMG_KERNEL_OFFSET    0x00060000
+#define  IMG_KERNEL_OFFSET    0x000A0000
 #define  IMG_KERNEL_SIZE      0x00500000
 
 /*mtdblock3 [-$]*/
-#define  IMG_ROOTFS_OFFSET    0x00560000
+#define  IMG_ROOTFS_OFFSET    0x005A0000
 
 /* ====================================================
  * wx:image RAM layout, same as kernel link config
@@ -377,7 +389,7 @@
 /** wx: !NOTE: 
 * MUST make sure the offset of root partition same as the target system(linux-kernel defined)
 */
-#define MTDPARTS_DEFAULT "mtdparts=wxmtd:256k@0(uboot)," \
+#define MTDPARTS_DEFAULT "mtdparts=wxmtd:512k@0(uboot)," \
 	"128k(param)," \
 	"5m(kernel)," \
 	"-(rootfs)"
