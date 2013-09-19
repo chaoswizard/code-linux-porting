@@ -103,7 +103,7 @@ support_fs_tbl = {
 #option table
 #if option has param,must follow char':' or '=' when long opt
 opt_short_tbl = 'ht:vd:'
-opt_long_tbl = ["help", "type=", "dir="]
+opt_long_tbl = ["help", "type=", "dir=", "prefix="]
 
 #usage string for tips
 usage_str = '[options] -t type -d dir' + linesep +\
@@ -111,6 +111,7 @@ usage_str = '[options] -t type -d dir' + linesep +\
             '\t     support list:' + str(support_fs_tbl.keys()) +linesep +\
             '\t-d, --dir=directory\.rootfs directory' + linesep +\
             '\t-v\t\t\tverbose mode' + linesep +\
+            '\t--prefix\t\toutput prefix name' + linesep +\
             '\t-h, --help\t\tprint this message'
 
 
@@ -181,6 +182,7 @@ def main():
     else:
         global debug
         fstype = "unsupport"
+        prefix_name = "fsimg_"
         fsdir = ""
         for o, a in opts:
             if o == "-v":
@@ -194,6 +196,8 @@ def main():
             elif o in ("-d", "--dir"):
                 fsdir = a
                 mydebug('arg:directory=', a)
+            elif o == "--prefix":
+                prefix_name = prefix_name + str(a)
             else:
                 pass
             
@@ -202,7 +206,7 @@ def main():
             usage()
             return 0
         else:
-            myrootfs = RootFs(fstype, "img")
+            myrootfs = RootFs(fstype, prefix_name)
             if not myrootfs.setup_rootfs_dir(fsdir):
                 print 'invalid rootfs path:%s.' % (str(fsdir))
                 usage()
