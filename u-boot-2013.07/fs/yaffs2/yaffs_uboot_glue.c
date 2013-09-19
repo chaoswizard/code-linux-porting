@@ -39,6 +39,19 @@
 unsigned yaffs_trace_mask = 0x0; /* Disable logging */
 static int yaffs_errno;
 
+/*
+ * yaffsfs_CheckMemRegion()
+ * Check that access to an address is valid.
+ * This can check memory is in bounds and is writable etc.
+ *
+ * Returns 0 if ok, negative if not.
+ */
+int yaffsfs_CheckMemRegion(const void *addr, size_t size, int write_request)
+{
+	if(!addr)
+		return -1;
+	return 0;
+}
 
 void yaffs_bug_fn(const char *fn, int n)
 {
@@ -231,12 +244,12 @@ int cmd_yaffs_devconfig(char *_mp, int flash_dev,
 	if (chip->ecc.layout->oobavail < sizeof(struct yaffs_packed_tags2))
 		dev->param.inband_tags = 1;
 	dev->param.n_caches = 10;
-	dev->param.write_chunk_tags_fn = nandmtd2_write_chunk_tags;
-	dev->param.read_chunk_tags_fn = nandmtd2_read_chunk_tags;
-	dev->param.erase_fn = nandmtd_EraseBlockInNAND;
-	dev->param.initialise_flash_fn = nandmtd_InitialiseNAND;
-	dev->param.bad_block_fn = nandmtd2_MarkNANDBlockBad;
-	dev->param.query_block_fn = nandmtd2_QueryNANDBlock;
+	dev->tagger.write_chunk_tags_fn = nandmtd2_write_chunk_tags;
+	dev->tagger.read_chunk_tags_fn = nandmtd2_read_chunk_tags;
+	dev->drv.drv_erase_fn = nandmtd_EraseBlockInNAND;
+	dev->drv.drv_initialise_fn = nandmtd_InitialiseNAND;
+	dev->tagger.mark_bad_fn = nandmtd2_MarkNANDBlockBad;
+	dev->tagger.query_block_fn = nandmtd2_QueryNANDBlock;
 
 	yaffs_add_device(dev);
 
