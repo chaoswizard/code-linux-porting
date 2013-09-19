@@ -23,34 +23,32 @@ class CRootFs(object):
         #time stamp
         self.stamp = time.strftime("%Y%m%d%H%M%S")
         self.name = fstype
-        self.path = name + self.stamp + '.' + self.name
-        self.root = ""
-        self.tooldir = 'fs_utils'
-        self.datadir = 'rootfs'
+        self.image_path = name + self.stamp + '.' + self.name
+        self.fs_path = ""
+        self.tool_search_dir = 'fs_utils'
+        self.fs_search_dir = 'rootfs'
         mydebug('Init rootfs')
 
-    def set_rootdir(self, path):
+    def set_fs_path(self, path):
         "set root fs top dircetory"
-        self.root = self.datadir + dirsep + path
-        if (not os.path.isdir(self.root)) or (not os.path.exists(self.root)):
+        self.fs_path = self.fs_search_dir + dirsep + path
+        if (not os.path.isdir(self.fs_path)) or (not os.path.exists(self.fs_path)):
             return False
         
         return True
-    def get_rootdir(self):
-        return self.root
 
-    def get_tooldir(self):
-        return self.tooldir
+    def get_fs_path(self):
+        return self.fs_path
 
     def proc_cmd(self, cmd, args):
-        self.proc_str = self.tooldir + dirsep + cmd + ' ' + args
+        self.proc_str = self.tool_search_dir + dirsep + cmd + ' ' + args
         print 'proc:', self.proc_str
         #subprocess.Popen(self.porc_str)
         os.system(self.proc_str)
         
     def info(self):
-        print 'src path\t:',  self.get_rootdir()
-        print 'dest path\t:', self.path
+        print 'src path\t:',  self.get_fs_path()
+        print 'dest path\t:', self.image_path
 
 #yaffs class
 class CYaffsFs(CRootFs):
@@ -63,7 +61,7 @@ class CYaffsFs(CRootFs):
     def get_cmd(self):
         return 'mkyaffs2image'
     def get_arg(self):
-        return self.get_rootdir() +' ' + self.path
+        return self.get_fs_path() +' ' + self.image_path
 
 #ramfs class
 class CRamFs(CRootFs):
@@ -76,7 +74,7 @@ class CRamFs(CRootFs):
     def get_cmd(self):
         return 'test_mk_ramfs'
     def get_arg(self):
-        return self.get_rootdir() +' ' + self.path     
+        return self.get_fs_path() +' ' + self.image_path     
         
 #cramfs class
 class CCramFs(CRootFs):
@@ -89,7 +87,7 @@ class CCramFs(CRootFs):
     def get_cmd(self):
         return 'test_mk_cramfs'
     def get_arg(self):
-        return self.get_rootdir() +' ' + self.path  
+        return self.get_fs_path() +' ' + self.image_path  
 
 #global variables define
 
@@ -111,7 +109,7 @@ opt_long_tbl = ["help", "type=", "dir="]
 usage_str = '[options] -t type -d dir' + linesep +\
             '\t-t, --type=name\tfilesystem type' + linesep +\
             '\t     support list:' + str(support_fs_tbl.keys()) +linesep +\
-            '\t-d, --dir=directory\troot fs top directory' + linesep +\
+            '\t-d, --dir=directory\.rootfs directory' + linesep +\
             '\t-v\t\t\tverbose mode' + linesep +\
             '\t-h, --help\t\tprint this message'
 
@@ -146,8 +144,8 @@ class RootFs(object):
         self.cls_name = self.cls_tab[key];
         self.instance = self.cls_name(name)
 
-    def setup_root(self, path):
-        return super(self.cls_name, self.instance).set_rootdir(path)
+    def setup_rootfs_dir(self, path):
+        return super(self.cls_name, self.instance).set_fs_path(path)
 
     def make_fs(self):
         super(self.cls_name, self.instance).proc_cmd(self.instance.get_cmd(), self.instance.get_arg())
@@ -205,7 +203,7 @@ def main():
             return 0
         else:
             myrootfs = RootFs(fstype, "img")
-            if not myrootfs.setup_root(fsdir):
+            if not myrootfs.setup_rootfs_dir(fsdir):
                 print 'invalid rootfs path:%s.' % (str(fsdir))
                 usage()
                 return 0

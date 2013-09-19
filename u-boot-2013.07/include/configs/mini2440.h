@@ -147,6 +147,13 @@
 #define CONFIG_CMD_NAND
 /* Dynamic MTD partition support */
 #define CONFIG_CMD_MTDPARTS
+/* yaffs cmd support*/
+#define CONFIG_CMD_NAND_YAFFS
+/* use yaffs2*/
+#define CONFIG_YAFFS2
+
+
+
 
 /*
  * Miscellaneous configurable options
