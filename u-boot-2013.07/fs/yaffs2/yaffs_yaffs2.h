@@ -33,7 +33,7 @@ void yaffs2_checkpt_invalidate(struct yaffs_dev *dev);
 int yaffs2_checkpt_save(struct yaffs_dev *dev);
 int yaffs2_checkpt_restore(struct yaffs_dev *dev);
 
-int yaffs2_handle_hole(struct yaffs_obj *obj, loff_t new_size);
+int yaffs2_handle_hole(struct yaffs_obj *obj, Y_LOFF_T new_size);
 int yaffs2_scan_backwards(struct yaffs_dev *dev);
 
 #endif

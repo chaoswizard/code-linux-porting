@@ -28,6 +28,7 @@
 
 #include "yaffs_trace.h"
 #include "yaffs_packedtags2.h"
+#include "string.h"
 
 #define yaffs_dev_to_mtd(dev) ((struct mtd_info *)((dev)->driver_context))
 #define yaffs_dev_to_lc(dev) ((struct yaffs_linux_context *)((dev)->os_context))
@@ -45,7 +46,9 @@ int nandmtd2_write_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
 	struct mtd_oob_ops ops;
 
 	int retval = 0;
+
 	loff_t addr;
+	u8 local_spare[128];
 
 	struct yaffs_packed_tags2 pt;
 
@@ -77,13 +80,13 @@ int nandmtd2_write_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
 		yaffs_pack_tags2(&pt, tags, !dev->param.no_tags_ecc);
 	}
 
-	ops.mode = MTD_OPS_AUTO_OOB;
+	ops.mode = MTD_OOB_AUTO;
 	ops.ooblen = (dev->param.inband_tags) ? 0 : packed_tags_size;
 	ops.len = dev->param.total_bytes_per_chunk;
 	ops.ooboffs = 0;
 	ops.datbuf = (u8 *) data;
 	ops.oobbuf = (dev->param.inband_tags) ? NULL : packed_tags_ptr;
-	retval = mtd_write_oob(mtd, addr, &ops);
+	retval = mtd->write_oob(mtd, addr, &ops);
 
 	if (retval == 0)
 		return YAFFS_OK;
@@ -121,16 +124,16 @@ int nandmtd2_read_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
 	}
 
 	if (dev->param.inband_tags || (data && !tags))
-		retval = mtd_read(mtd, addr, dev->param.total_bytes_per_chunk,
+		retval = mtd->read(mtd, addr, dev->param.total_bytes_per_chunk,
 				   &dummy, data);
 	else if (tags) {
-		ops.mode = MTD_OPS_AUTO_OOB;
+		ops.mode = MTD_OOB_AUTO;
 		ops.ooblen = packed_tags_size;
 		ops.len = data ? dev->data_bytes_per_chunk : packed_tags_size;
 		ops.ooboffs = 0;
 		ops.datbuf = data;
 		ops.oobbuf = local_spare;
-		retval = mtd_read_oob(mtd, addr, &ops);
+		retval = mtd->read_oob(mtd, addr, &ops);
 	}
 
 	if (dev->param.inband_tags) {
@@ -179,7 +182,7 @@ int nandmtd2_MarkNANDBlockBad(struct yaffs_dev *dev, int blockNo)
 		"nandmtd2_MarkNANDBlockBad %d", blockNo);
 
 	retval =
-	    mtd_block_markbad(mtd,
+	    mtd->block_markbad(mtd,
 			       blockNo * dev->param.chunks_per_block *
 			       dev->data_bytes_per_chunk);
 
@@ -198,7 +201,7 @@ int nandmtd2_QueryNANDBlock(struct yaffs_dev *dev, int blockNo,
 
 	yaffs_trace(YAFFS_TRACE_MTD, "nandmtd2_QueryNANDBlock %d", blockNo);
 	retval =
-	    mtd_block_isbad(mtd,
+	    mtd->block_isbad(mtd,
 			     blockNo * dev->param.chunks_per_block *
 			     dev->data_bytes_per_chunk);
 

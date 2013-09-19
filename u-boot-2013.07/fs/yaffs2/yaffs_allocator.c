@@ -354,3 +354,4 @@ void yaffs_init_raw_tnodes_and_objs(struct yaffs_dev *dev)
 		yaffs_init_raw_objs(dev);
 	}
 }
+

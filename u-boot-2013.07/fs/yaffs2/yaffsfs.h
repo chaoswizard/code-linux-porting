@@ -30,7 +30,14 @@
 #define NAME_MAX	256
 #endif
 
-#define YAFFS_MAX_FILE_SIZE (0x800000000LL - 1)
+#define YAFFS_MAX_FILE_SIZE \
+	( (sizeof(Y_LOFF_T) < 8) ? YAFFS_MAX_FILE_SIZE_32 : (0x800000000LL - 1) )
+
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 
 struct yaffs_dirent {
@@ -54,7 +61,7 @@ struct yaffs_stat {
 	int		st_uid;		/* user ID of owner */
 	int		st_gid;		/* group ID of owner */
 	unsigned	st_rdev;	/* device type (if inode device) */
-	loff_t		st_size;	/* total size, in bytes */
+	Y_LOFF_T		st_size;	/* total size, in bytes */
 	unsigned long	st_blksize;	/* blocksize for filesystem I/O */
 	unsigned long	st_blocks;	/* number of blocks allocated */
 #ifdef CONFIG_YAFFS_WINCE
@@ -90,13 +97,13 @@ int yaffs_dup(int fd);
 int yaffs_read(int fd, void *buf, unsigned int nbyte) ;
 int yaffs_write(int fd, const void *buf, unsigned int nbyte) ;
 
-int yaffs_pread(int fd, void *buf, unsigned int nbyte, loff_t offset);
-int yaffs_pwrite(int fd, const void *buf, unsigned int nbyte, loff_t offset);
+int yaffs_pread(int fd, void *buf, unsigned int nbyte, Y_LOFF_T offset);
+int yaffs_pwrite(int fd, const void *buf, unsigned int nbyte, Y_LOFF_T offset);
 
-loff_t yaffs_lseek(int fd, loff_t offset, int whence) ;
+Y_LOFF_T yaffs_lseek(int fd, Y_LOFF_T offset, int whence) ;
 
-int yaffs_truncate(const YCHAR *path, loff_t new_size);
-int yaffs_ftruncate(int fd, loff_t new_size);
+int yaffs_truncate(const YCHAR *path, Y_LOFF_T new_size);
+int yaffs_ftruncate(int fd, Y_LOFF_T new_size);
 
 int yaffs_unlink(const YCHAR *path) ;
 int yaffs_rename(const YCHAR *oldPath, const YCHAR *newPath) ;
@@ -156,6 +163,10 @@ struct yaffs_dirent *yaffs_readdir(yaffs_DIR *dirp) ;
 void yaffs_rewinddir(yaffs_DIR *dirp) ;
 int yaffs_closedir(yaffs_DIR *dirp) ;
 
+/* Some non-standard functions to use fds to access directories */
+struct yaffs_dirent *yaffs_readdir_fd(int fd);
+void yaffs_rewinddir_fd(int fd);
+
 int yaffs_mount(const YCHAR *path) ;
 int yaffs_mount2(const YCHAR *path, int read_only);
 int yaffs_mount_common(const YCHAR *path, int read_only, int skip_checkpt);
@@ -164,6 +175,10 @@ int yaffs_unmount(const YCHAR *path) ;
 int yaffs_unmount2(const YCHAR *path, int force);
 int yaffs_remount(const YCHAR *path, int force, int read_only);
 
+int yaffs_format(const YCHAR *path,
+		int unmount_flag,
+		int force_unmount_flag,
+		int remount_flag);
 
 int yaffs_sync(const YCHAR *path) ;
 
@@ -173,8 +188,8 @@ int yaffs_readlink(const YCHAR *path, YCHAR *buf, int bufsiz);
 int yaffs_link(const YCHAR *oldpath, const YCHAR *newpath);
 int yaffs_mknod(const YCHAR *pathname, mode_t mode, dev_t dev);
 
-loff_t yaffs_freespace(const YCHAR *path);
-loff_t yaffs_totalspace(const YCHAR *path);
+Y_LOFF_T yaffs_freespace(const YCHAR *path);
+Y_LOFF_T yaffs_totalspace(const YCHAR *path);
 
 int yaffs_inodecount(const YCHAR *path);
 
@@ -206,4 +221,11 @@ int yaffs_set_error(int error);
 /* Trace control functions */
 unsigned  yaffs_set_trace(unsigned tm);
 unsigned  yaffs_get_trace(void);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif

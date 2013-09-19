@@ -23,6 +23,7 @@ int yaffs1_scan(struct yaffs_dev *dev)
 {
 	struct yaffs_ext_tags tags;
 	int blk;
+	int result;
 	int chunk;
 	int c;
 	int deleted;
@@ -94,7 +95,8 @@ int yaffs1_scan(struct yaffs_dev *dev)
 			/* Read the tags and decide what to do */
 			chunk = blk * dev->param.chunks_per_block + c;
 
-			yaffs_rd_chunk_tags_nand(dev, chunk, NULL, &tags);
+			result = yaffs_rd_chunk_tags_nand(dev, chunk, NULL,
+							  &tags);
 
 			/* Let's have a good look at this chunk... */
 
@@ -179,8 +181,9 @@ int yaffs1_scan(struct yaffs_dev *dev)
 				yaffs_set_chunk_bit(dev, blk, c);
 				bi->pages_in_use++;
 
-				yaffs_rd_chunk_tags_nand(dev, chunk,
-							 chunk_data, NULL);
+				result = yaffs_rd_chunk_tags_nand(dev, chunk,
+								  chunk_data,
+								  NULL);
 
 				oh = (struct yaffs_obj_hdr *)chunk_data;
 

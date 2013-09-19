@@ -19,20 +19,20 @@
 
 int yaffs_skip_verification(struct yaffs_dev *dev)
 {
-	dev = dev;
+	(void) dev;
 	return !(yaffs_trace_mask &
 		 (YAFFS_TRACE_VERIFY | YAFFS_TRACE_VERIFY_FULL));
 }
 
 static int yaffs_skip_full_verification(struct yaffs_dev *dev)
 {
-	dev = dev;
+	(void) dev;
 	return !(yaffs_trace_mask & (YAFFS_TRACE_VERIFY_FULL));
 }
 
 static int yaffs_skip_nand_verification(struct yaffs_dev *dev)
 {
-	dev = dev;
+	(void) dev;
 	return !(yaffs_trace_mask & (YAFFS_TRACE_VERIFY_NAND));
 }
 
@@ -224,6 +224,7 @@ void yaffs_verify_file(struct yaffs_obj *obj)
 {
 	u32 x;
 	int required_depth;
+	int actual_depth;
 	int last_chunk;
 	u32 offset_in_chunk;
 	u32 the_chunk;
@@ -254,6 +255,8 @@ void yaffs_verify_file(struct yaffs_obj *obj)
 		x >>= YAFFS_TNODES_INTERNAL_BITS;
 		required_depth++;
 	}
+
+	actual_depth = obj->variant.file_variant.top_level;
 
 	/* Check that the chunks in the tnode tree are all correct.
 	 * We do this by scanning through the tnode tree and
@@ -521,6 +524,6 @@ void yaffs_verify_free_chunks(struct yaffs_dev *dev)
 
 int yaffs_verify_file_sane(struct yaffs_obj *in)
 {
-	in = in;
+	(void) in;
 	return YAFFS_OK;
 }

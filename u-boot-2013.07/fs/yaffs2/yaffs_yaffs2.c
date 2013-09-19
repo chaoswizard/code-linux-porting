@@ -828,15 +828,15 @@ int yaffs2_checkpt_restore(struct yaffs_dev *dev)
 	return retval;
 }
 
-int yaffs2_handle_hole(struct yaffs_obj *obj, loff_t new_size)
+int yaffs2_handle_hole(struct yaffs_obj *obj, Y_LOFF_T new_size)
 {
 	/* if new_size > old_file_size.
 	 * We're going to be writing a hole.
 	 * If the hole is small then write zeros otherwise write a start
 	 * of hole marker.
 	 */
-	loff_t old_file_size;
-	loff_t increase;
+	Y_LOFF_T old_file_size;
+	Y_LOFF_T increase;
 	int small_hole;
 	int result = YAFFS_OK;
 	struct yaffs_dev *dev = NULL;
@@ -873,7 +873,7 @@ int yaffs2_handle_hole(struct yaffs_obj *obj, loff_t new_size)
 
 	if (local_buffer) {
 		/* fill hole with zero bytes */
-		loff_t pos = old_file_size;
+		Y_LOFF_T pos = old_file_size;
 		int this_write;
 		int written;
 		memset(local_buffer, 0, dev->data_bytes_per_chunk);
@@ -942,10 +942,11 @@ static inline int yaffs2_scan_chunk(struct yaffs_dev *dev,
 	struct yaffs_obj *in;
 	struct yaffs_obj *parent;
 	int equiv_id;
-	loff_t file_size;
+	Y_LOFF_T file_size;
 	int is_shrink;
 	int is_unlinked;
 	struct yaffs_ext_tags tags;
+	int result;
 	int alloc_failed = 0;
 	int chunk = blk * dev->param.chunks_per_block + chunk_in_block;
 	struct yaffs_file_var *file_var;
@@ -953,12 +954,12 @@ static inline int yaffs2_scan_chunk(struct yaffs_dev *dev,
 	struct yaffs_symlink_var *sl_var;
 
 	if (summary_available) {
-		yaffs_summary_fetch(dev, &tags, chunk_in_block);
+		result = yaffs_summary_fetch(dev, &tags, chunk_in_block);
 		tags.seq_number = bi->seq_number;
 	}
 
 	if (!summary_available || tags.obj_id == 0) {
-		yaffs_rd_chunk_tags_nand(dev, chunk, NULL, &tags);
+		result = yaffs_rd_chunk_tags_nand(dev, chunk, NULL, &tags);
 		dev->tags_used++;
 	} else {
 		dev->summary_used++;
@@ -1033,8 +1034,8 @@ static inline int yaffs2_scan_chunk(struct yaffs_dev *dev,
 		dev->n_free_chunks++;
 	} else if (tags.chunk_id > 0) {
 		/* chunk_id > 0 so it is a data chunk... */
-		loff_t endpos;
-		loff_t chunk_base = (tags.chunk_id - 1) *
+		Y_LOFF_T endpos;
+		Y_LOFF_T chunk_base = (tags.chunk_id - 1) *
 					dev->data_bytes_per_chunk;
 
 		*found_chunks = 1;
@@ -1113,7 +1114,10 @@ static inline int yaffs2_scan_chunk(struct yaffs_dev *dev,
 			 * invalid data until needed.
 			 */
 
-			yaffs_rd_chunk_tags_nand(dev, chunk, chunk_data, NULL);
+			result = yaffs_rd_chunk_tags_nand(dev,
+						  chunk,
+						  chunk_data,
+						  NULL);
 
 			oh = (struct yaffs_obj_hdr *)chunk_data;
 
@@ -1153,7 +1157,7 @@ static inline int yaffs2_scan_chunk(struct yaffs_dev *dev,
 				 (tags.extra_available &&
 				  tags.extra_obj_type == YAFFS_OBJECT_TYPE_FILE)
 				)) {
-				loff_t this_size = (oh) ?
+				Y_LOFF_T this_size = (oh) ?
 					yaffs_oh_to_size(oh) :
 					tags.extra_file_size;
 				u32 parent_obj_id = (oh) ?
@@ -1345,6 +1349,7 @@ int yaffs2_scan_backwards(struct yaffs_dev *dev)
 	int n_to_scan = 0;
 	enum yaffs_block_state state;
 	int c;
+	int deleted;
 	LIST_HEAD(hard_list);
 	struct yaffs_block_info *bi;
 	u32 seq_number;
@@ -1462,6 +1467,7 @@ int yaffs2_scan_backwards(struct yaffs_dev *dev)
 		/* get the block to scan in the correct order */
 		blk = block_index[block_iter].block;
 		bi = yaffs_get_block_info(dev, blk);
+		deleted = 0;
 
 		summary_available = yaffs_summary_read(dev, dev->sum_tags, blk);
 

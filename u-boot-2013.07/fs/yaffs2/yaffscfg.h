@@ -36,3 +36,4 @@ struct yaffsfs_DeviceConfiguration {
 
 
 #endif
+
