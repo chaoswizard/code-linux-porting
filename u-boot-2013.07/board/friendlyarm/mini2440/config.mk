@@ -13,10 +13,4 @@ sinclude $(OBJTREE)/board/$(BOARDDIR)/config.tmp
 
 ifdef CONFIG_NAND_SPL
 CONFIG_SYS_TEXT_BASE = 0 
-else
-#build for producer
-#CONFIG_SYS_TEXT_BASE = 0x30000000
-
-#build for nand-spl
-CONFIG_SYS_TEXT_BASE = 0x33000000
 endif
