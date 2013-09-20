@@ -221,5 +221,5 @@ int yaffs_nand_install_drv(struct yaffs_dev *dev, struct nand_chip *chip)
 	drv->drv_initialise_fn = yaffs_nand_drv_Initialise;
 	drv->drv_deinitialise_fn = yaffs_nand_drv_Deinitialise;
 
-	return YAFFS_FAIL;
+	return YAFFS_OK;
 }
