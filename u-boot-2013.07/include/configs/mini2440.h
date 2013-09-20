@@ -182,9 +182,10 @@
 
 /*
  * Size of malloc() pool
- * BZIP2 / LZO / LZMA need a lot of RAM
+ * BZIP2 / LZO / LZMA  need a lot of RAM(+2M)
+ * ymount need a lot of RAM(+4M)
  */
-#define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + (2<<20))
+#define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + (6<<20))
 
 /*
  * Physical Memory Map

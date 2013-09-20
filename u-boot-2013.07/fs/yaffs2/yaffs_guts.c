@@ -141,6 +141,7 @@ static int yaffs_init_tmp_buffers(struct yaffs_dev *dev)
 u8 *yaffs_get_temp_buffer(struct yaffs_dev * dev)
 {
 	int i;
+    u8* ptr;
 
 	dev->temp_in_use++;
 	if (dev->temp_in_use > dev->max_temp)
@@ -160,7 +161,11 @@ u8 *yaffs_get_temp_buffer(struct yaffs_dev * dev)
 	 */
 
 	dev->unmanaged_buffer_allocs++;
-	return kmalloc(dev->data_bytes_per_chunk, GFP_NOFS);
+    ptr = kmalloc(dev->data_bytes_per_chunk, GFP_NOFS);
+    if (!ptr) {
+        yaffs_trace(YAFFS_TRACE_BUFFERS, "NeedRam:%X", dev->data_bytes_per_chunk);
+    }
+	return ptr;
 
 }
 

@@ -285,7 +285,7 @@ void nand_boot(void)
 	if (nand_chip.select_chip)
 		nand_chip.select_chip(&nand_info, 0);
 
-	nand_chip.cmd_ctrl(&nand_info, NAND_CMD_RESET, 0);
+	//nand_chip.cmd_ctrl(&nand_info, NAND_CMD_RESET, 0);
 
 	DEBUG_LL(0x15, 0);
 	/*

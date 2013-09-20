@@ -29,6 +29,7 @@
 #include "yaffs_mtdif.h"
 #include "yaffs_mtdif2.h"
 #include "yaffs_uboot_glue.h"
+#include "yaffs_nand_drv.h"
 
 #if 0
 #include <errno.h>
@@ -244,12 +245,17 @@ int cmd_yaffs_devconfig(char *_mp, int flash_dev,
 	if (chip->ecc.layout->oobavail < sizeof(struct yaffs_packed_tags2))
 		dev->param.inband_tags = 1;
 	dev->param.n_caches = 10;
-	dev->tagger.write_chunk_tags_fn = nandmtd2_write_chunk_tags;
-	dev->tagger.read_chunk_tags_fn = nandmtd2_read_chunk_tags;
-	dev->drv.drv_erase_fn = nandmtd_EraseBlockInNAND;
-	dev->drv.drv_initialise_fn = nandmtd_InitialiseNAND;
-	dev->tagger.mark_bad_fn = nandmtd2_MarkNANDBlockBad;
-	dev->tagger.query_block_fn = nandmtd2_QueryNANDBlock;
+
+    if(yaffs_nand_install_drv(dev, chip) != YAFFS_OK) {
+        goto err;
+    }
+
+    if (dev->param.is_yaffs2) {
+        dev->tagger.write_chunk_tags_fn = nandmtd2_write_chunk_tags;
+        dev->tagger.read_chunk_tags_fn = nandmtd2_read_chunk_tags;
+        dev->tagger.mark_bad_fn = nandmtd2_MarkNANDBlockBad;
+        dev->tagger.query_block_fn = nandmtd2_QueryNANDBlock;
+    } 
 
 	yaffs_add_device(dev);
 
