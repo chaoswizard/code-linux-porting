@@ -185,7 +185,7 @@
  * BZIP2 / LZO / LZMA  need a lot of RAM(+2M)
  * ymount need a lot of RAM(+4M)
  */
-#define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + (6<<20))
+#define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + (4<<20))
 
 /*
  * Physical Memory Map
@@ -321,6 +321,13 @@
 /*mtdblock3 [-$]*/
 #define  IMG_ROOTFS_OFFSET    0x005A0000
 
+/*
+ * yaffs device config
+ * FS_BLOCK = ROOTFS_OFFSET / CONFIG_SYS_NAND_BLOCK_SIZE
+ */
+#define  IMG_FS_BLOCK_START   0x2D
+#define  IMG_FS_BLOCK_END     0x50
+
 /* ====================================================
  * wx:image RAM layout, same as kernel link config
  */
@@ -447,6 +454,8 @@
 	"ofs-uboot="  __stringify(IMG_UBOOT_OFFSET) "\0"	\
 	"ofs-kernel="  __stringify(IMG_KERNEL_OFFSET) "\0"	\
 	"ofs-rootfs="  __stringify(IMG_ROOTFS_OFFSET) "\0"	\
+	"fs-blk-start="  __stringify(IMG_FS_BLOCK_START) "\0"	\
+	"fs-blk-end="  __stringify(IMG_FS_BLOCK_END) "\0"	\
 	"size-kernel=" __stringify(IMG_KERNEL_SIZE) "\0"	\
 	"size-uboot=" __stringify(IMG_UBOOT_SIZE) "\0"	\
 	"loadaddr="  __stringify(CONFIG_SYS_LOAD_ADDR) "\0"	\
@@ -456,6 +465,10 @@
        		"bootm ${kerneladdr}\0"\
 	"boot-kernel-tftp=tftp ${kerneladdr} ${name-kernel}; "	\
 	 	"bootm ${kerneladdr}\0"	\
+	"boot-args-yaffs="  CONFIG_BOOTARGS_YAFFS "\0"\
+	"boot-args-ramdisk=" CONFIG_BOOTARGS_RAMDISK "\0"\
+	"boot-args-cramfs=" CONFIG_BOOTARGS_CRAMFS "\0"\
+	"boot-args-ramfs=" CONFIG_BOOTARGS_RAMFS "\0"\
 	"install2nand-uboot="	\
         	"nand erase ${ofs-uboot} ${filesize};"	\
         	"nand write ${fileaddr} ${ofs-uboot} ${filesize}\0"	\
@@ -477,11 +490,9 @@
         	"run install2nand-kernel\0"	\
 	"uart2nand-yaffs=loadb ${loadaddr};"	\
         	"run install2nand-yaffs\0"	\
-	"nand-erase-env=nand erase " __stringify(IMG_PARAM_OFFSET)" " __stringify(IMG_PARAM_SIZE) "\0"\
-	"set-args-yaffs=setenv bootargs "  CONFIG_BOOTARGS_YAFFS "\0"\
-	"set-args-ramdisk=setenv bootargs " CONFIG_BOOTARGS_RAMDISK "\0"\
-	"set-args-cramfs=setenv bootargs " CONFIG_BOOTARGS_CRAMFS "\0"\
-	"set-args-ramfs=setenv bootargs " CONFIG_BOOTARGS_RAMFS "\0"\
+	"env-clear=nand erase " __stringify(IMG_PARAM_OFFSET)" " __stringify(IMG_PARAM_SIZE) "\0"\
+	"env-reset=env default -a; mtdparts default;saveenv\0"\
+	"yaffs-config=ydevconfig rootfs 0 ${fs-blk-start} ${fs-blk-end}\0" \
 	""
 
 /*---------------- boot default -------------------------------------*/

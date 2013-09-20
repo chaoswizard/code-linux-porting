@@ -40,9 +40,8 @@
 static inline struct nand_chip *dev_to_chip(struct yaffs_dev *dev)
 {
 	struct mtd_info *mtd = (struct mtd_info *)(dev->driver_context);
-	struct nand_chip *nand_chip = (struct nand_chip *)mtd->priv;
     
-	return nand_chip;
+	return (struct nand_chip *)mtd->priv;
 }
 
 static inline struct mtd_info *dev_to_mtd(struct yaffs_dev *dev)
@@ -52,27 +51,16 @@ static inline struct mtd_info *dev_to_mtd(struct yaffs_dev *dev)
 
 static inline loff_t dev_block_offset(struct yaffs_dev *dev, int block_no)
 {
-#if 0
-    return  block_no * dev->param.chunks_per_block *
-			       dev->data_bytes_per_chunk;
-#else
     struct nand_chip *chip = dev_to_chip(dev);
 
     return block_no << chip->phys_erase_shift;
-
-#endif
 }
 
 static inline uint64_t dev_block_size(struct yaffs_dev *dev)
 {
-#if 0
-        return  dev->data_bytes_per_chunk;
-#else
-        struct nand_chip *chip = dev_to_chip(dev);
-    
-        return 1 << chip->phys_erase_shift;
-    
-#endif
+    struct nand_chip *chip = dev_to_chip(dev);
+
+    return 1 << chip->phys_erase_shift;
 }
 
 

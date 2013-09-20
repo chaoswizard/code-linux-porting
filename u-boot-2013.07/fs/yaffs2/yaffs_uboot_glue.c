@@ -262,6 +262,10 @@ int cmd_yaffs_devconfig(char *_mp, int flash_dev,
 	printf("Configures yaffs mount %s: dev %d start block %d, end block %d %s\n",
 		mp, flash_dev, start_block, end_block,
 		dev->param.inband_tags ? "using inband tags" : "");
+
+    
+    printf("\nStart 0X%X offset: 0x%X\n", start_block,mtd->erasesize*start_block);
+    printf("End   0X%X offset: 0x%X\n", end_block,mtd->erasesize*end_block);
 	return 0;
 
 err:
