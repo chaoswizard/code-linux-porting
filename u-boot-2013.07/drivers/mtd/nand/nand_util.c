@@ -518,6 +518,10 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 
 	if (actual)
 		*actual = 0;
+    
+    printf("write_skip_bad:offset=%llx,size=[%x/%llx],src=%x,flags=%x.\n", 
+            offset, left_to_write, lim, buffer, flags);
+
 
 #ifdef CONFIG_CMD_NAND_YAFFS
 	if (flags & WITH_YAFFS_OOB) {
@@ -560,6 +564,7 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 	if (actual)
 		*actual = used_for_write;
 
+    printf("actual write=%x,skip=%d\n", actual, need_skip);
 	if (need_skip < 0) {
 		printf("Attempt to write outside the flash area\n");
 		*length = 0;
@@ -573,6 +578,7 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 	}
 
 	if (!need_skip && !(flags & WITH_DROP_FFS)) {
+        printf("not drop ffs,%x\n", used_for_write);
 		rval = nand_write(nand, offset, length, buffer);
 		if (rval == 0)
 			return 0;
@@ -582,6 +588,7 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 			offset, rval);
 		return rval;
 	}
+    printf("mtd_write_oob %x\n", left_to_write);
 
 	while (left_to_write > 0) {
 		size_t block_offset = offset & (nand->erasesize - 1);

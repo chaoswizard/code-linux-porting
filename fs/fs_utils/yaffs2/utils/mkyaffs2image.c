@@ -175,7 +175,7 @@ static void shuffle_oob(char *spareData, struct yaffs_packed_tags2 *pt)
 {
 	assert(sizeof(*pt) <= spareSize);
 	// NAND LAYOUT: For non-trivial OOB orderings, here would be a good place to shuffle.
-	memcpy(spareData + 2, pt, sizeof(*pt));
+	memcpy(spareData, pt, sizeof(*pt));
 }
 
 static int write_chunk(u8 *data, u32 id, u32 chunk_id, u32 n_bytes)
