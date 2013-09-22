@@ -112,26 +112,28 @@ static int yaffs_nand_drv_ReadChunk(struct yaffs_dev *dev, int nand_chunk,
     ops.oobbuf = oob;
     ret = mtd->_read_oob(mtd, addr, &ops);
 
-    if (mtd_is_eccerr(ret)) {
-       ecc_result = YAFFS_ECC_RESULT_UNFIXED;
-    } else if (mtd_is_bitflip(ret)) {
-       ecc_result = YAFFS_ECC_RESULT_FIXED;
-    } else if (ret) {
-        ecc_result = YAFFS_ECC_RESULT_UNKNOWN;
-    } else {// 0
-        ecc_result = YAFFS_ECC_RESULT_NO_ERROR;
+    if ((ret < 0) && !(mtd_is_bitflip_or_eccerr(ret))) {
+        if (ecc_result_out) {
+            *ecc_result_out = YAFFS_ECC_RESULT_UNKNOWN;
+        }
+        return YAFFS_FAIL;
+    }
+    
+    ecc_result = YAFFS_ECC_RESULT_NO_ERROR;
+    
+    if (data) {
+        if (mtd_is_eccerr(ret)) {
+           ecc_result = YAFFS_ECC_RESULT_UNFIXED;
+        } else if (mtd_is_bitflip(ret)) {
+           ecc_result = -YAFFS_ECC_RESULT_FIXED;
+        } 
     }
 
     if (ecc_result_out) {
         *ecc_result_out = ecc_result;
     }
     
-	if ((ecc_result == YAFFS_ECC_RESULT_NO_ERROR) || \
-        (ecc_result == YAFFS_ECC_RESULT_FIXED)) {
-        return YAFFS_OK;
-    } else {
-        return YAFFS_FAIL;
-    }
+    return YAFFS_OK;
 }
 
 static int yaffs_nand_drv_EraseBlock(struct yaffs_dev *dev, int block_no)
