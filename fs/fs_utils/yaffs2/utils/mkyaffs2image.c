@@ -517,7 +517,9 @@ int main(int argc, char *argv[])
 		printf("usage: mkyaffs2image dir image_file [convert]\n");
 		printf("           dir        the directory tree to be converted\n");
 		printf("           image_file the output file to hold the image\n");
-        printf("           'convert'  produce a big-endian image from a little-endian machine\n");
+        	printf("           'convert'  produce a big-endian image from a little-endian machine\n");
+        	printf("   <debug> pagesize=%d, pagesPerBlock=%d, oob=%d, oob_used=%d\n",
+			 chunkSize, pagesPerBlock, spareSize, sizeof(struct yaffs_packed_tags2));
 		exit(1);
 	}
 
