@@ -281,7 +281,7 @@ void debug_ll(unsigned int num1, unsigned int num2)
 	_uart_putc_('\r');
 	_uart_putc_('\n');
 # if defined(CONFIG_MINI2440_LED) || defined(CONFIG_MINI2440_SPEAKER)
-	speaker_led_play(DEBUG_LL_MODE_LED | DEBUG_LL_MODE_SOUND, num1,192);
+	speaker_led_play(DEBUG_LL_MODE_LED | DEBUG_LL_MODE_SOUND, num1&0xf,192);
     _delay_ms_(1024);
 #endif
 }

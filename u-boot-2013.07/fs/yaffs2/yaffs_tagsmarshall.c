@@ -41,8 +41,7 @@ static int yaffs_tags_marshall_write(struct yaffs_dev *dev,
 		struct yaffs_packed_tags2_tags_only *pt2tp;
 		pt2tp =
 		    (struct yaffs_packed_tags2_tags_only *)(data +
-							dev->
-							data_bytes_per_chunk);
+							dev->data_bytes_per_chunk);
 		yaffs_pack_tags2_tags_only(pt2tp, tags);
 	} else {
 		yaffs_pack_tags2(&pt, tags, !dev->param.no_tags_ecc);

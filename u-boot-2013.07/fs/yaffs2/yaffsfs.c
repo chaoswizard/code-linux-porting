@@ -2532,7 +2532,6 @@ int yaffs_mount_common(const YCHAR *path, int read_only, int skip_checkpt)
 		yaffsfs_SetError(-EFAULT);
 		return -1;
 	}
-    //yaffs_set_trace(~0);
 
 	yaffs_trace(YAFFS_TRACE_MOUNT, "yaffs: Mounting %s", path);
 

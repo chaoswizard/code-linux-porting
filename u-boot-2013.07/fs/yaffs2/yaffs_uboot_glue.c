@@ -37,7 +37,11 @@
 #include "malloc.h"
 #endif
 
+#if 0
 unsigned yaffs_trace_mask = 0x0; /* Disable logging */
+#else
+unsigned yaffs_trace_mask = ~0x0; 
+#endif
 static int yaffs_errno;
 
 /*

@@ -219,9 +219,9 @@ static int nand_load(struct mtd_info *mtd, unsigned int offs,
 	unsigned int page;
 
 
-	DEBUG_LL(0x40, offs);
-    DEBUG_LL(0x41, uboot_size);
-    DEBUG_LL(0x42, dst);
+	DEBUG_LL(0xA1, offs);
+    DEBUG_LL(0xA2, uboot_size);
+    DEBUG_LL(0xA3, dst);
     
 
 	/*
@@ -231,27 +231,33 @@ static int nand_load(struct mtd_info *mtd, unsigned int offs,
 	lastblock = (offs + uboot_size - 1) / CONFIG_SYS_NAND_BLOCK_SIZE;
 	page = (offs % CONFIG_SYS_NAND_BLOCK_SIZE) / CONFIG_SYS_NAND_PAGE_SIZE;
 
+	DEBUG_LL(0xB1, block);
+    DEBUG_LL(0xB2, lastblock);
+    DEBUG_LL(0xB3, page);
+
+
 	while (block <= lastblock) {
 		if (!nand_is_bad_block(mtd, block)) {
-            DEBUG_LL(0x43, block);
-			/*
-			 * Skip bad blocks
-			 */
 			while (page < CONFIG_SYS_NAND_PAGE_COUNT) {
 				nand_read_page(mtd, block, page, dst);
 				dst += CONFIG_SYS_NAND_PAGE_SIZE;
 				page++;
 			}
-
+            DEBUG_LL(0x55, block);
 			page = 0;
 		} else {
-            DEBUG_LL(0x44, block);
+			/*
+			 * Skip bad blocks
+			 */
+            DEBUG_LL(0xAA, block);
 			lastblock++;
 		}
 
 		block++;
 	}
-
+    
+    DEBUG_LL(0xBE, lastblock);
+    
 	return 0;
 }
 
@@ -266,7 +272,7 @@ void nand_boot(void)
 	nand_info_t nand_info;
 	__attribute__((noreturn)) void (*uboot)(void);
 
-    DEBUG_LL(0x13, CONFIG_SYS_TMP_SP_ADDR);
+    DEBUG_LL(0x10, CONFIG_SYS_TMP_SP_ADDR);
         
     
 	/*
@@ -278,30 +284,27 @@ void nand_boot(void)
 	nand_chip.dev_ready = NULL;	/* preset to NULL */
 	nand_chip.options = 0;
 
-	DEBUG_LL(0x14, board_nand_init);
     
 	board_nand_init(&nand_chip);
     
 	if (nand_chip.select_chip)
 		nand_chip.select_chip(&nand_info, 0);
 
-	//nand_chip.cmd_ctrl(&nand_info, NAND_CMD_RESET, 0);
-
-	DEBUG_LL(0x15, 0);
 	/*
 	 * Load U-Boot image from NAND into RAM
 	 */
+    DEBUG_LL(0x11, nand_load);
 	nand_load(&nand_info, CONFIG_SYS_NAND_U_BOOT_OFFS, CONFIG_SYS_NAND_U_BOOT_SIZE,
 		  (uchar *)CONFIG_SYS_NAND_U_BOOT_DST);
 
 
 #ifdef CONFIG_NAND_ENV_DST
-	DEBUG_LL(0x16, 0);
+	DEBUG_LL(0x12, 0);
 	nand_load(&nand_info, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE,
 		  (uchar *)CONFIG_NAND_ENV_DST);
 
 #ifdef CONFIG_ENV_OFFSET_REDUND
-	DEBUG_LL(0x17, 0);
+	DEBUG_LL(0x13, 0);
 	nand_load(&nand_info, CONFIG_ENV_OFFSET_REDUND, CONFIG_ENV_SIZE,
 		  (uchar *)CONFIG_NAND_ENV_DST + CONFIG_ENV_SIZE);
 #endif
@@ -314,6 +317,6 @@ void nand_boot(void)
 	 * Jump to U-Boot image
 	 */
 	uboot = (void *)CONFIG_SYS_NAND_U_BOOT_START;
-    DEBUG_LL(0x18, uboot);
+    DEBUG_LL(0x14, uboot);
 	(*uboot)();
 }
