@@ -519,10 +519,6 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 	if (actual)
 		*actual = 0;
     
-    printf("write_skip_bad:offset=%llx,size=[%x/%llx],src=%x,flags=%x.\n", 
-            offset, left_to_write, lim, buffer, flags);
-
-
 #ifdef CONFIG_CMD_NAND_YAFFS
 	if (flags & WITH_YAFFS_OOB) {
 		if (flags & ~WITH_YAFFS_OOB)
@@ -541,6 +537,10 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 	{
 		blocksize = nand->erasesize;
 	}
+
+    printf("write_skip_bad:\noffset=%llx,size=[%x/%llx],src=%x,blocksize=%x,flags=%x.\n", 
+            offset, left_to_write, lim, buffer, blocksize, flags);
+
 
 	/*
 	 * nand_write() handles unaligned, partial page writes.
@@ -564,7 +564,8 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 	if (actual)
 		*actual = used_for_write;
 
-    printf("actual write=%x,skip=%d\n", actual, need_skip);
+
+    printf("actual write=%x, need_skip=%d\n", actual, need_skip);
 	if (need_skip < 0) {
 		printf("Attempt to write outside the flash area\n");
 		*length = 0;
@@ -577,8 +578,7 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 		return -EFBIG;
 	}
 
-	if (!need_skip && !(flags & WITH_DROP_FFS)) {
-        printf("not drop ffs,%x\n", used_for_write);
+	if (!need_skip && (flags & WITH_DROP_FFS)) {
 		rval = nand_write(nand, offset, length, buffer);
 		if (rval == 0)
 			return 0;
