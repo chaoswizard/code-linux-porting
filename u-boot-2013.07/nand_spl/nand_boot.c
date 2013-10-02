@@ -243,7 +243,7 @@ static int nand_load(struct mtd_info *mtd, unsigned int offs,
 				dst += CONFIG_SYS_NAND_PAGE_SIZE;
 				page++;
 			}
-            DEBUG_LL(0x55, block);
+            DEBUG_LL(0x55, block*CONFIG_SYS_NAND_BLOCK_SIZE);
 			page = 0;
 		} else {
 			/*

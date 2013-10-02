@@ -26,22 +26,24 @@
 #include "yaffscfg.h"
 #include "yaffsfs.h"
 #include "yaffs_packedtags2.h"
-#include "yaffs_mtdif.h"
-#include "yaffs_mtdif2.h"
 #include "yaffs_uboot_glue.h"
 #include "yaffs_nand_drv.h"
+#include "yaffs_trace.h"
 
 #if 0
 #include <errno.h>
 #else
 #include "malloc.h"
 #endif
-
 #if 1
-unsigned yaffs_trace_mask = 0x0; /* Disable logging */
+unsigned int yaffs_trace_mask =	YAFFS_TRACE_BAD_BLOCKS |
+    YAFFS_TRACE_ALWAYS |
+    YAFFS_TRACE_OS |
+		0;
 #else
-unsigned yaffs_trace_mask = ~0x0; 
+unsigned int yaffs_trace_mask = ~0;
 #endif
+
 static int yaffs_errno;
 
 /*
@@ -254,13 +256,10 @@ int cmd_yaffs_devconfig(char *_mp, int flash_dev,
         goto err;
     }
 
-    if (dev->param.is_yaffs2) {
-        dev->tagger.write_chunk_tags_fn = nandmtd2_write_chunk_tags;
-        dev->tagger.read_chunk_tags_fn = nandmtd2_read_chunk_tags;
-        dev->tagger.mark_bad_fn = nandmtd2_MarkNANDBlockBad;
-        dev->tagger.query_block_fn = nandmtd2_QueryNANDBlock;
-    } 
-
+	/* Install the default tags marshalling functions if needed. */
+	yaffs_tags_compat_install(dev);
+	yaffs_tags_marshall_install(dev);
+    
 	yaffs_add_device(dev);
 
 	printf("Configures yaffs mount %s: dev %d start block %d, end block %d %s\n",

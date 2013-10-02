@@ -174,6 +174,14 @@ static void little_to_big_endian(struct yaffs_ext_tags *tagsPtr)
 static void shuffle_oob(char *spareData, struct yaffs_packed_tags2 *pt)
 {
 	assert(sizeof(*pt) <= spareSize);
+	unsigned pos = (nPages-1)*(chunkSize+spareSize);
+	unsigned oob= pos+chunkSize;
+
+	printf("<ecc>%08X:%08X:[%08X]:%X,%X,%X\n",pos,oob, pt->t.n_bytes,
+			 pt->ecc.col_parity,
+		 	pt->ecc.line_parity,
+		 	pt->ecc.line_parity_prime);
+
 	// NAND LAYOUT: For non-trivial OOB orderings, here would be a good place to shuffle.
 	memcpy(spareData, pt, sizeof(*pt));
 }
@@ -505,21 +513,35 @@ static int process_directory(int parent, const char *path)
 
 }
 
+#define membersize(type, m)  (sizeof(((type *)0)->m))
+#define memberoffset(type, m) ((unsigned int)(&(((type *)0)->m)))
+#define debug_member(type, m) do{\
+	 printf("%s\n\tsize=%d/%d\toffset=%d\n",\
+	 "<info>:\t" #type "\t[" #m "]",\
+	 membersize(type, m), sizeof(type),\
+	 memberoffset(type, m));\
+}while(0)
+
 
 int main(int argc, char *argv[])
 {
 	struct stat stats;
 	
 	printf("mkyaffs2image: image building tool for YAFFS2 built "__DATE__"\n");
+       	printf("<info>: pagesize=%d, pagesPerBlock=%d, oob=%d, oob_used=%d\n",
+			 chunkSize, pagesPerBlock, spareSize, sizeof(struct yaffs_packed_tags2));
+	debug_member(struct yaffs_packed_tags2, ecc);
+	debug_member(struct yaffs_packed_tags2, t);
+	debug_member(struct yaffs_packed_tags2_tags_only, n_bytes);
+	debug_member(struct yaffs_ext_tags, n_bytes);
 	
+
 	if(argc < 3)
 	{
 		printf("usage: mkyaffs2image dir image_file [convert]\n");
 		printf("           dir        the directory tree to be converted\n");
 		printf("           image_file the output file to hold the image\n");
         	printf("           'convert'  produce a big-endian image from a little-endian machine\n");
-        	printf("   <debug> pagesize=%d, pagesPerBlock=%d, oob=%d, oob_used=%d\n",
-			 chunkSize, pagesPerBlock, spareSize, sizeof(struct yaffs_packed_tags2));
 		exit(1);
 	}
 

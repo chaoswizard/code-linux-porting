@@ -406,7 +406,7 @@
 /*----------mtd config must refer as image layout table---------------*/
 #define CONFIG_BOOTARGS_YAFFS         	\
 	"root=/dev/mtdblock3 rw "\
-	"rootfstype=yaffs "\
+	"rootfstype=yaffs2 "\
 	"noinitrd "\
 	"console=ttySAC0,115200 "\
 	"init=/linuxrc"

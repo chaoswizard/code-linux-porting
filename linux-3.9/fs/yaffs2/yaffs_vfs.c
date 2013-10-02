@@ -37,6 +37,8 @@
  */
 #include <linux/version.h>
 
+//#define YAFFS_ENABLE_XATTR
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 10))
 #define YAFFS_COMPILE_BACKGROUND
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 23))
@@ -894,6 +896,8 @@ static int yaffs_setattr(struct dentry *dentry, struct iattr *attr)
 	return error;
 }
 
+#ifdef CONFIG_YAFFS_XATTR
+#ifdef YAFFS_ENABLE_XATTR
 static int yaffs_setxattr(struct dentry *dentry, const char *name,
 		   const void *value, size_t size, int flags)
 {
@@ -995,7 +999,32 @@ static ssize_t yaffs_listxattr(struct dentry * dentry, char *buff, size_t size)
 
 	return error;
 }
+#else
+static int yaffs_setxattr(struct dentry *dentry, const char *name,
+		   const void *value, size_t size, int flags)
 
+{
+    return -EOPNOTSUPP;
+}
+
+static ssize_t yaffs_getxattr(struct dentry * dentry, const char *name,
+			void *buff, size_t size)
+{
+    return -EOPNOTSUPP;
+
+}
+
+static ssize_t yaffs_listxattr(struct dentry * dentry, char *buff, size_t size)
+{
+    return -EOPNOTSUPP;
+}
+
+static int yaffs_removexattr(struct dentry *dentry, const char *name)
+{
+    return -EOPNOTSUPP;
+}
+#endif
+#endif
 
 static const struct inode_operations yaffs_file_inode_operations = {
 	.setattr = yaffs_setattr,
@@ -1859,6 +1888,9 @@ static void yaffs_fill_inode_from_obj(struct inode *inode,
 			inode->i_mode, inode->i_uid, inode->i_gid,
 			inode->i_size, atomic_read(&inode->i_count));
 
+        char *type_str = "defalut";
+        
+
 		switch (obj->yst_mode & S_IFMT) {
 		default:	/* fifo, device or socket */
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 5, 0))
@@ -1870,23 +1902,27 @@ static void yaffs_fill_inode_from_obj(struct inode *inode,
 #endif
 			break;
 		case S_IFREG:	/* file */
+            type_str = "FILE";
 			inode->i_op = &yaffs_file_inode_operations;
 			inode->i_fop = &yaffs_file_operations;
 			inode->i_mapping->a_ops =
 			    &yaffs_file_address_operations;
 			break;
 		case S_IFDIR:	/* directory */
+            type_str = "DIR";
 			inode->i_op = &yaffs_dir_inode_operations;
 			inode->i_fop = &yaffs_dir_operations;
 			break;
 		case S_IFLNK:	/* symlink */
+            type_str = "SYMLINK";
 			inode->i_op = &yaffs_symlink_inode_operations;
 			break;
 		}
 
 		yaffs_inode_to_obj_lv(inode) = obj;
-
 		obj->my_inode = inode;
+        
+		yaffs_trace(YAFFS_TRACE_ALWAYS, "<elvon>%s size %d type %s", obj->short_name,(u32)inode->i_size, type_str);
 
 	} else {
 		yaffs_trace(YAFFS_TRACE_OS,
@@ -2755,8 +2791,10 @@ static struct super_block *yaffs_internal_read_super(int yaffs_version,
 	param->n_reserved_blocks = 5;
 	param->n_caches = (options.no_cache) ? 0 : 10;
 	param->inband_tags = inband_tags;
-
+    
+#ifdef CONFIG_YAFFS_XATTR
 	param->enable_xattr = 1;
+#endif
 	if (options.lazy_loading_overridden)
 		param->disable_lazy_load = !options.lazy_loading_enabled;
 

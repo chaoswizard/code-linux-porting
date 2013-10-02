@@ -26,7 +26,7 @@ COBJS-$(CONFIG_YAFFS2) := \
 	yaffsfs.o yaffs_guts.o yaffs_hweight.o yaffs_nameval.o yaffs_nand.o yaffs_nand_drv.o\
 	yaffs_packedtags1.o yaffs_packedtags2.o yaffs_qsort.o \
 	yaffs_summary.o yaffs_tagscompat.o yaffs_tagsmarshall.o yaffs_verify.o yaffs_yaffs1.o \
-	yaffs_yaffs2.o yaffs_mtdif.o yaffs_mtdif2.o
+	yaffs_yaffs2.o
 
 SRCS    := $(COBJS-y:.o=.c)
 OBJS    := $(addprefix $(obj),$(COBJS-y))

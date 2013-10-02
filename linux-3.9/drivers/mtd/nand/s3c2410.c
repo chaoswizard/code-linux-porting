@@ -515,6 +515,62 @@ static int s3c2410_nand_correct_data(struct mtd_info *mtd, u_char *dat,
 	return -1;
 }
 
+
+static int s3c2440_nand_correct_data(struct mtd_info *mtd, u_char *dat,
+				     u_char *read_ecc, u_char *calc_ecc)
+{
+	struct s3c2410_nand_info *info = s3c2410_nand_mtd_toinfo(mtd);
+
+	u32  meccdata0, meccdata1, estat0, err_byte_addr;
+	int  ret = -1;
+	u8	repaired;
+
+	meccdata0 = (read_ecc[1] << 16) | read_ecc[0];
+	meccdata1 = (read_ecc[3] << 16) | read_ecc[2];
+	
+	writel(meccdata0,info->regs + S3C2440_NFECCD0);
+	writel(meccdata1,info->regs + S3C2440_NFECCD1);
+
+	pr_debug("s3c2440_info_correct_data(%p,):   0x%02x 0x%02x 0x%02x 0x%02x\n",
+			mtd, read_ecc[0], read_ecc[1], read_ecc[2], read_ecc[3]);
+
+	/*Read ecc status */
+	estat0= readl(info->regs + S3C2440_NFESTAT0);   
+
+	switch(estat0 & 0x3) {
+		case  0: /* No error */
+		   ret= 0;
+		   break;
+
+		case  1:
+		/*
+		 * 1 bit error (Correctable)
+		 * (nfestat0 >> 7) & 0x7ff :error byte number
+		 * (nfestat0 >> 4) & 0x7 	 :error bit number
+		 */
+			err_byte_addr = (estat0 >> 7) & 0x7ff;
+			repaired= dat[err_byte_addr] ^ (1 << ((estat0 >> 4) & 0x7));
+
+			pr_debug("S3C info: 1 bit error detected at byte%d. "
+				"Correcting from 0x%02x to 0x%02x...OK\n",
+				err_byte_addr, dat[err_byte_addr], repaired);
+
+			dat[err_byte_addr]= repaired;
+			ret= 1;
+			break;
+
+		case  2: /* Multiple error */
+		case  3: /* ECC area error */
+		   pr_debug("S3C info: ECC uncorrectable errordetected. "
+				  "Not correctable.\n");
+		   ret= -1;
+		   break;
+	}
+
+	return ret;
+}
+
+
 /* ECC functions
  *
  * These allow the s3c2410 and s3c2440 to use the controller's ECC
@@ -547,7 +603,10 @@ static void s3c2440_nand_enable_hwecc(struct mtd_info *mtd, int mode)
 	unsigned long ctrl;
 
 	ctrl = readl(info->regs + S3C2440_NFCONT);
-	writel(ctrl | S3C2440_NFCONT_INITECC, info->regs + S3C2440_NFCONT);
+	ctrl |= S3C2440_NFCONT_INITECC;
+	ctrl &= ~S3C2440_NFCONT_MAIN_ECCLOCK;
+
+	writel(ctrl, info->regs + S3C2440_NFCONT);
 }
 
 static int s3c2410_nand_calculate_ecc(struct mtd_info *mtd, const u_char *dat,
@@ -588,6 +647,7 @@ static int s3c2440_nand_calculate_ecc(struct mtd_info *mtd, const u_char *dat,
 	ecc_code[0] = ecc;
 	ecc_code[1] = ecc >> 8;
 	ecc_code[2] = ecc >> 16;
+	ecc_code[3] = ecc >> 24;
 
 	pr_debug("%s: returning ecc %06lx\n", __func__, ecc & 0xffffff);
 
@@ -824,6 +884,7 @@ static void s3c2410_nand_init_chip(struct s3c2410_nand_info *info,
 	case TYPE_S3C2440:
 		chip->ecc.hwctl     = s3c2440_nand_enable_hwecc;
 		chip->ecc.calculate = s3c2440_nand_calculate_ecc;
+		chip->ecc.correct   = s3c2440_nand_correct_data;
 		break;
 	}
 #else
@@ -893,6 +954,17 @@ static void s3c2410_nand_update_chip(struct s3c2410_nand_info *info,
 		chip->ecc.bytes	    = 3;
 		chip->ecc.layout    = &nand_hw_eccoob;
 	}
+
+#ifdef CONFIG_MTD_NAND_S3C2410_HWECC
+	switch (info->cpu_type) {
+	case TYPE_S3C2440:
+		chip->ecc.size	    = 2048;
+		chip->ecc.bytes	    = 4;
+		break;
+	default:
+		break;
+	}	
+#endif
 }
 
 /* s3c24xx_nand_probe
@@ -996,8 +1068,16 @@ static int s3c24xx_nand_probe(struct platform_device *pdev)
 						 NULL);
 
 		if (nmtd->scan_res == 0) {
+			struct nand_chip *chip = &nmtd->chip;
+		
 			s3c2410_nand_update_chip(info, nmtd);
 			nand_scan_tail(&nmtd->mtd);
+			if(chip->ecc.layout) {
+				printk(KERN_INFO "elvon:eccbytes=%d,oobfree=%d,%d\n",
+					 chip->ecc.layout->eccbytes,
+					 chip->ecc.layout->oobfree[0].offset,
+					 chip->ecc.layout->oobfree[0].length);
+			}
 			s3c2410_nand_add_partition(info, nmtd, sets);
 		}
 

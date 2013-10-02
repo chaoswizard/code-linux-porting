@@ -36,31 +36,9 @@
 #include "yaffs_guts.h"
 #include "yaffs_ecc.h"
 
-
-static inline struct nand_chip *dev_to_chip(struct yaffs_dev *dev)
-{
-	struct mtd_info *mtd = (struct mtd_info *)(dev->driver_context);
-    
-	return (struct nand_chip *)mtd->priv;
-}
-
 static inline struct mtd_info *dev_to_mtd(struct yaffs_dev *dev)
 {
 	return (struct mtd_info *)(dev->driver_context);
-}
-
-static inline loff_t dev_block_offset(struct yaffs_dev *dev, int block_no)
-{
-    struct nand_chip *chip = dev_to_chip(dev);
-
-    return block_no << chip->phys_erase_shift;
-}
-
-static inline uint64_t dev_block_size(struct yaffs_dev *dev)
-{
-    struct nand_chip *chip = dev_to_chip(dev);
-
-    return 1 << chip->phys_erase_shift;
 }
 
 
@@ -75,11 +53,12 @@ static int yaffs_nand_drv_WriteChunk(struct yaffs_dev *dev, int nand_chunk,
 
     if(!data || !oob)
         return YAFFS_FAIL;
-
+    
+    memset(&ops, 0, sizeof(ops));
 
     ops.mode = MTD_OPS_AUTO_OOB;
     ops.ooblen = oob_len;
-    ops.len = data_len;
+    ops.len = (data) ? data_len : 0;
     ops.ooboffs = 0;
     ops.datbuf = data;
     ops.oobbuf = oob;
@@ -96,42 +75,50 @@ static int yaffs_nand_drv_WriteChunk(struct yaffs_dev *dev, int nand_chunk,
 static int yaffs_nand_drv_ReadChunk(struct yaffs_dev *dev, int nand_chunk,
 				   u8 *data, int data_len,
 				   u8 *oob, int oob_len,
-				   enum yaffs_ecc_result *ecc_result_out)
+				   enum yaffs_ecc_result *ecc_result)
 {
 	struct mtd_info *mtd = dev_to_mtd(dev);
 	struct mtd_oob_ops ops;
 	loff_t addr = ((loff_t) nand_chunk) * dev->param.total_bytes_per_chunk;
 	int ret;
-	enum yaffs_ecc_result ecc_result;
 
+    memset(&ops, 0, sizeof(ops));
+    
     ops.mode = MTD_OPS_AUTO_OOB;
     ops.ooblen = oob_len;
-    ops.len = data_len;
+    ops.len = (data) ? data_len : 0;
     ops.ooboffs = 0;
     ops.datbuf = data;
     ops.oobbuf = oob;
     ret = mtd->_read_oob(mtd, addr, &ops);
 
-    if ((ret < 0) && !(mtd_is_bitflip_or_eccerr(ret))) {
-        if (ecc_result_out) {
-            *ecc_result_out = YAFFS_ECC_RESULT_UNKNOWN;
-        }
-        return YAFFS_FAIL;
-    }
     
-    ecc_result = YAFFS_ECC_RESULT_NO_ERROR;
-    
-    if (data) {
-        if (mtd_is_eccerr(ret)) {
-           ecc_result = YAFFS_ECC_RESULT_UNFIXED;
-        } else if (mtd_is_bitflip(ret)) {
-           ecc_result = -YAFFS_ECC_RESULT_FIXED;
-        } 
+    if (ret) {
+        yaffs_trace(YAFFS_TRACE_MTD,
+                "read_oob failed, chunk %d, mtd error %d",
+                nand_chunk, ret);
     }
 
-    if (ecc_result_out) {
-        *ecc_result_out = ecc_result;
-    }
+    switch (ret) {
+    case 0:
+            /* no error */
+            if(ecc_result)
+                    *ecc_result = YAFFS_ECC_RESULT_NO_ERROR;
+            break;
+
+    case -EUCLEAN:// mtd_is_bitflip
+            /* MTD's ECC fixed the data */
+            if(ecc_result)
+                    *ecc_result = YAFFS_ECC_RESULT_FIXED;
+            break;
+
+    case -EBADMSG:// mtd_is_eccerr
+    default:
+            /* MTD's ECC could not fix the data */
+            if(ecc_result)
+                    *ecc_result = YAFFS_ECC_RESULT_UNFIXED;
+            return YAFFS_FAIL;
+    }   
     
     return YAFFS_OK;
 }
@@ -139,18 +126,22 @@ static int yaffs_nand_drv_ReadChunk(struct yaffs_dev *dev, int nand_chunk,
 static int yaffs_nand_drv_EraseBlock(struct yaffs_dev *dev, int block_no)
 {
 	struct mtd_info *mtd = dev_to_mtd(dev);
+
+    loff_t addr;
+    u32 block_size;
 	struct erase_info ei;
 	int retval = 0;
 
+    block_size = dev->param.total_bytes_per_chunk * dev->param.chunks_per_block;
+    addr = ((loff_t ) block_no) * block_size;
+
 	ei.mtd = mtd;
-	ei.addr = dev_block_offset(dev, block_no);
-	ei.len = dev_block_size(dev);
+	ei.addr = addr;
+	ei.len = block_size;
 	ei.time = 1000;
 	ei.retries = 2;
 	ei.callback = NULL;
 	ei.priv = (u_long) dev;
-
-	/* Todo finish off the ei if required */
 
 
 	retval = mtd->_erase(mtd, &ei);
@@ -164,25 +155,27 @@ static int yaffs_nand_drv_EraseBlock(struct yaffs_dev *dev, int block_no)
 static int yaffs_nand_drv_MarkBad(struct yaffs_dev *dev, int block_no)
 {
 	struct mtd_info *mtd = dev_to_mtd(dev);
+
+    u32 block_size = dev->param.total_bytes_per_chunk * dev->param.chunks_per_block;
 	int retval = 0;
 
-    retval = mtd->_block_markbad(mtd, dev_block_offset(dev, block_no));
-	if (retval == 0)
-		return YAFFS_OK;
-	else
-		return YAFFS_FAIL;
+    retval = mtd->_block_markbad(mtd, ((loff_t)block_no) * block_size);
+    if (retval) 
+        return YAFFS_FAIL ;
+    else 
+        return YAFFS_OK;
 }
 
 
 static int yaffs_nand_drv_CheckBad(struct yaffs_dev *dev, int block_no)
 {
 	struct mtd_info *mtd = dev_to_mtd(dev);
-    
-    if (mtd->_block_isbad(mtd, dev_block_offset(dev, block_no))) {
-        return YAFFS_FAIL;
-    } else {
-        return YAFFS_OK;
-    }
+    u32 block_size = dev->param.total_bytes_per_chunk * dev->param.chunks_per_block;
+	int retval = 0;
+
+
+    retval= mtd->_block_isbad(mtd, ((loff_t)block_no) * block_size);
+    return (retval) ? YAFFS_FAIL : YAFFS_OK;
 }
 
 static int yaffs_nand_drv_Initialise(struct yaffs_dev *dev)

@@ -27,6 +27,11 @@
 
 #define hweight8(x) yaffs_hweight8(x)
 #define hweight32(x) yaffs_hweight32(x)
-
+#if 1
+#define yaffs_trace(msk, fmt, ...) do { \
+	printf("yaffs: " fmt "\n", ##__VA_ARGS__); \
+} while (0)
+#else
 #define yaffs_trace(...) do {} while (0)
+#endif
 #endif

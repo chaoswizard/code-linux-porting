@@ -1996,7 +1996,7 @@ static int yaffs_do_getxattr(const YCHAR *path, const char *name,
 
 int yaffs_getxattr(const YCHAR *path, const char *name, void *data, int size)
 {
-	return yaffs_do_getxattr(path, name, data, size, 1);
+    return yaffs_do_getxattr(path, name, data, size, 1);
 }
 
 int yaffs_lgetxattr(const YCHAR *path, const char *name, void *data, int size)

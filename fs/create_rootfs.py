@@ -23,7 +23,7 @@ class CRootFs(object):
         #time stamp
         self.stamp = time.strftime("%Y%m%d%H%M%S")
         self.name = fstype
-        self.image_path = name + self.stamp + '.' + self.name
+        self.image_path = self.stamp + name + '.' + self.name
         self.fs_path = ""
         self.tool_search_dir = 'fs_utils'
         self.fs_search_dir = 'rootfs'
@@ -41,7 +41,7 @@ class CRootFs(object):
         return self.fs_path
 
     def proc_cmd(self, cmd, args):
-        self.proc_str = self.tool_search_dir + dirsep + cmd + ' ' + args
+        self.proc_str ='fakeroot ' + self.tool_search_dir + dirsep + cmd + ' ' + args + '2>&1 | tee ' + self.stamp + '.log' 
         print 'proc:', self.proc_str
         #subprocess.Popen(self.porc_str)
         os.system(self.proc_str)
@@ -182,7 +182,7 @@ def main():
     else:
         global debug
         fstype = "unsupport"
-        prefix_name = "fsimg_"
+        prefix_name = "_fsimg"
         fsdir = ""
         for o, a in opts:
             if o == "-v":

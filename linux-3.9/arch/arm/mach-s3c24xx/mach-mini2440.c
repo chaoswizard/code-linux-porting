@@ -247,24 +247,29 @@ static struct s3c24xx_mci_pdata mini2440_mmc_cfg __initdata = {
 static struct mtd_partition mini2440_default_nand_part[] __initdata = {
 	[0] = {
 		.name	= "u-boot",
-		.size	= SZ_512K,
+		.size	= 0x00080000,
 		.offset	= 0,
 	},
 	[1] = {
 		.name	= "u-boot-env",
-		.size	= SZ_128K,
-		.offset	= SZ_512K,
+		.size	= 0x00020000,
+		.offset	= 0x00080000,
 	},
 	[2] = {
 		.name	= "kernel",
 		/* 5 megabytes, for a kernel with no modules
 		 * or a uImage with a ramdisk attached */
 		.size	= 0x00500000,
-		.offset	= SZ_512K + SZ_128K,
+		.offset	= 0x000a0000,
 	},
 	[3] = {
-		.name	= "root",
-		.offset	= SZ_512K + SZ_128K + 0x00500000,
+		.name	= "rootfs",
+		.offset	= 0x005a0000,
+		.size	= 0x00580000,
+	},
+	[4] = {
+		.name	= "user",
+		.offset	= 0x005a0000 + 0x00580000,
 		.size	= MTDPART_SIZ_FULL,
 	},
 };
@@ -275,7 +280,7 @@ static struct s3c2410_nand_set mini2440_nand_sets[] __initdata = {
 		.nr_chips	= 1,
 		.nr_partitions	= ARRAY_SIZE(mini2440_default_nand_part),
 		.partitions	= mini2440_default_nand_part,
-		.flash_bbt 	= 1, /* we use u-boot to create a BBT */
+		.flash_bbt 	= 0, /* we use u-boot to create a BBT */
 	},
 };
 
